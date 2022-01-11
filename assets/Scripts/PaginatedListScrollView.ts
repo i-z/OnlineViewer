@@ -29,7 +29,7 @@ export class PaginatedListScrollView extends Component {
     setData(data: string[]) {
         this._data = data;
         const pages = Math.ceil(data.length / this.itemsOnPage);
-        const pn = [...Array(pages).keys()].map((e)=>String(e + 1));
+        const pn = new Array(pages).fill(1).map((e, i) => String(i + 1));
         this.paginator.setData(pn);
         this.setPage(0);
     }
