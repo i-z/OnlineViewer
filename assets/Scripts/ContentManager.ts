@@ -3,7 +3,8 @@ import { _decorator, Component, Node, log, EditBox, Input } from 'cc';
 import { ListScrollView, ListScrollViewEvent } from './ListScrollView';
 import { PaginatedListScrollView } from './PaginatedListScrollView';
 import { PhotoDownloader } from './PhotoDownloader';
-import { InputWindow, InputWindowEvents } from './Windows/InputWindow';
+import { InputWindow, InputWindowEvents } from './AppWindows/InputWindow';
+import WindowDirector from './Windows/WindowDirector';
 import { WindowManager } from './Windows/WindowManager';
 const { ccclass, property } = _decorator;
  
@@ -12,9 +13,6 @@ export class ContentManager extends Component {
 
     @property(InputWindow)
     inputWindow: InputWindow;
-
-    @property(WindowManager)
-    windowManager: WindowManager;
 
     @property(PaginatedListScrollView)
     listScroll: PaginatedListScrollView;
@@ -27,7 +25,7 @@ export class ContentManager extends Component {
     start () {
         this.inputWindow.node.on(InputWindowEvents.INPUT, (text:string) => {
             if (text.length > 0) {
-                this.windowManager.closeWindow(0);
+                WindowDirector.instance.closeWindow('input');
             }
             this.processData(text);
         });

@@ -1,30 +1,108 @@
 
-import { _decorator, Component, Node, log, EventTouch } from 'cc';
-import { SimpleWindow } from './SimpleWindow';
+import { _decorator, Component, Node, director, assert, log, tween, UIOpacity } from 'cc';
+import { WindowTransitionBase } from './WindowTransitionBase';
 const { ccclass, property } = _decorator;
- 
+import Window, { WindowBehaviour } from './Window';
+
+@ccclass('WindowNode')
+export class WindowNode {
+    @property
+    name: string = '';
+    @property(Node)
+    window: Node = null;
+}
+
 @ccclass('WindowManager')
 export class WindowManager extends Component {
 
-    @property([SimpleWindow])
-    windows: SimpleWindow[] = [];
+    @property([WindowNode])
+    windows: WindowNode[] = [];
 
-    start () {
+    @property(Node)
+    darkCover: Node = null;
+
+    private _defaultTransition: WindowTransitionBase = null;
+    private _activeWindows: Map<string, Window> = new Map<string, Window>();
+    private _windows: Array<Window> = new Array<Window>();
+
+    start() {
+        this._defaultTransition = this.getComponent(WindowTransitionBase);
+        if (!this._defaultTransition) {
+            log("WindowManager's default transition is not set");
+        }
+        this.windows.forEach(w => w.window.active = false);
     }
 
-    openWindowByTouch(et: EventTouch, num: number) {
-        if (num < this.windows.length) {
-            this.windows[num].open();
+    openWindow(name: string) {
+        if (this._windows.length > 0 && this._windows[this._windows.length - 1].behaviour == WindowBehaviour.MODAL) {
+            log("Modal window prevents from opening other windows");
+            return;
+        }
+        const wn = this.windows.find(n => n.name == name);
+        if (!wn) {
+            assert(false, `Can't find window ${name}`);
+            return;
+        }
+        const aw = this._activeWindows.get(name);
+        if (aw) {
+            log(`Window ${name} already in use`);
+            return;
+        }
+        
+
+        let wnd = wn.window.getComponent(Window);
+        if (!wnd) {
+            wnd = wn.window.addComponent(Window);
+        }
+        wnd.name = name;
+        if (!wnd.show(this._defaultTransition)) {
+            return;
+        }
+        
+        wnd.node.parent.active = true;
+
+        this._activeWindows.set(name, wnd);
+        this._windows.push(wnd);
+        
+        if (wnd.behaviour == WindowBehaviour.MODAL) {
+            const op = this.darkCover.getComponent(UIOpacity);
+            assert(op, "WindowManager's darkCover requires UIOpacity component");
+            op.opacity = 0;
+            this.darkCover.active = true;
+            tween(op)
+            .to(0.15, { opacity: 255 })
+            .start();
         }
     }
-    
-    closeWindow(num: number) {
-        if (num < this.windows.length) {
-            this.windows[num].close();
+
+    closeWindow(name: string) {
+        const wn = this.windows.find(n => n.name == name);
+        if (!wn) {
+            assert(false, `Can't find window ${name}`);
+            return;
         }
+
+        const wnd = this._activeWindows.get(name);
+        if (!wnd) {
+            log(`Window ${name} already closed`);
+            return;
+        }
+
+        if (!wnd.hide(this._defaultTransition)) {
+            return;
+        }
+
+        if (wnd.behaviour == WindowBehaviour.MODAL && wnd === this._windows[this._windows.length - 1]) {
+            const op = this.darkCover.getComponent(UIOpacity);
+            assert(op, "WindowManager's darkCover requires UIOpacity component");
+            tween(op)
+            .to(0.15, { opacity: 0 })
+            .call(() => this.darkCover.active = false)
+            .start();
+        }
+
+        this._activeWindows.delete(name);
+        this._windows = this._windows.filter(w => w.name != name);
     }
-    
-    closeWindowByTouch(et: EventTouch, num: number) {
-        this.closeWindow(num);
-    }
+
 }
