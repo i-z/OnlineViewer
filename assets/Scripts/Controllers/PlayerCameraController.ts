@@ -9,8 +9,6 @@ export class PlayerCameraController extends Component {
     @property
     zoomMin: number = 10;
     @property
-    zoomMax: number = 800;
-    @property
     zoomStep: number = 2;
     @property
     zoomDuration: number = 0.2;
@@ -34,7 +32,7 @@ export class PlayerCameraController extends Component {
     @property(Node)
     canvas: Node = null;
 
-
+    private _zoomMax: number = 800;
     private _startPosition: Vec2;
     private _currentPanSpeed: Vec2 = new Vec2();
     private _panEnd: boolean = false;
@@ -71,13 +69,13 @@ export class PlayerCameraController extends Component {
 
         const tr = this.limits.getComponent(UITransform);
         this._cameraLimits = new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height);
-        this.zoomMax = this._cameraLimits.height / 2;
+        this._zoomMax = this._cameraLimits.height / 2;
     }
 
     scrollBy(d: number, zoomToMouse: boolean) {
         if (!this._zooming) {
             let newSize = this._scrollOrtographicSize * (d > 0 ? d : 1 / Math.abs(d));
-            if (newSize > this.zoomMax || newSize < this.zoomMin) {
+            if (newSize > this._zoomMax || newSize < this.zoomMin) {
                 return;
             }
             this._scrollOrtographicSize = newSize;
@@ -242,7 +240,7 @@ export class PlayerCameraController extends Component {
             const delta = distance - this._previousDistance;
             if ((delta > this._epsilon || delta < - this._epsilon) && this._previousDistance != 0) {
                 this.camera.orthoHeight *= this._previousDistance / distance;
-                this.camera.orthoHeight = misc.clampf(this.camera.orthoHeight, this.zoomMin, this.zoomMax);
+                this.camera.orthoHeight = misc.clampf(this.camera.orthoHeight, this.zoomMin, this._zoomMax);
             }
             this._previousDistance = distance;
         }
