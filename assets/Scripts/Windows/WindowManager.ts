@@ -48,7 +48,6 @@ export class WindowManager extends Component {
             log(`Window ${name} already in use`);
             return;
         }
-        
 
         let wnd = wn.window.getComponent(Window);
         if (!wnd) {
@@ -58,7 +57,7 @@ export class WindowManager extends Component {
         if (!wnd.show(this._defaultTransition)) {
             return;
         }
-        
+
         wnd.node.parent.active = true;
 
         this._activeWindows.set(name, wnd);
