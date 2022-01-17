@@ -1,6 +1,7 @@
 
 import { _decorator, Component, Node, log, Camera, EventTouch, Vec3, EventMouse, math, MathBase, misc, Vec2, Rect, UITransform, game, director, Canvas, Size, Touch } from 'cc';
 import { Bounds } from '../Components/Bounds';
+import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 const { ccclass, property } = _decorator;
 
 
@@ -31,6 +32,8 @@ export class PlayerCameraController extends Component {
     limits: Node = null;
     @property(Node)
     canvas: Node = null;
+    @property(ScrollInput)
+    scrollInput: ScrollInput = null;
 
     private _zoomMax: number = 800;
     private _startPosition: Vec2;
@@ -70,6 +73,14 @@ export class PlayerCameraController extends Component {
         const tr = this.limits.getComponent(UITransform);
         this._cameraLimits = new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height);
         this._zoomMax = this._cameraLimits.height / 2;
+
+        this.scrollInput.min = this.zoomMin;
+        this.scrollInput.max = this._zoomMax;
+        this.scrollInput.updateSize();
+        this.scrollInput.node.on(ScrollInputEventType.UPDATE_Y, (val: number) => {
+            this.camera.orthoHeight = val;
+        });
+        this.scrollInput.valueY = this.camera.orthoHeight;
     }
 
     scrollBy(d: number, zoomToMouse: boolean) {
@@ -155,7 +166,7 @@ export class PlayerCameraController extends Component {
                 this._fistTouchId = -1;
             }
         }
-        log(`${this._mousePosition.x} ${this._mousePosition.y}`);
+        //log(`${this._mousePosition.x} ${this._mousePosition.y}`);
     }
 
     private onTouchBegan(event: EventTouch) {

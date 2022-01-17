@@ -1,0 +1,123 @@
+        <script>
+
+            
+            // left: 37, up: 38, right: 39, down: 40,
+            // spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
+            var keys = {37: 1, 38: 1, 39: 1, 40: 1};
+            
+            function preventDefault(e) {
+                console.log("xxx");
+                console.log(e);
+              e.preventDefault();
+            }
+            
+            function preventDefaultForScrollKeys(e) {
+                if (keys[e.keyCode]) {
+                    preventDefault(e);
+                    return false;
+                }
+            }
+            
+            // modern Chrome requires { passive: false } when adding event
+            var supportsPassive = false;
+            try {
+              window.addEventListener("test", null, Object.defineProperty({}, 'passive', {
+                get: function () { supportsPassive = true; } 
+              }));
+            } catch(e) {}
+            
+            var wheelOpt = supportsPassive ? { passive: false } : false;
+            var wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
+            
+            // call this to Disable
+            function disableScroll() {
+              console.log("disableScroll");
+              window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
+              window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
+              window.addEventListener('touchmove', preventDefault, wheelOpt); // mobile
+              window.addEventListener('keydown', preventDefaultForScrollKeys, false);
+            }
+            
+            // call this to Enable
+            function enableScroll() {
+              window.removeEventListener('DOMMouseScroll', preventDefault, false);
+              window.removeEventListener(wheelEvent, preventDefault, wheelOpt); 
+              window.removeEventListener('touchmove', preventDefault, wheelOpt);
+              window.removeEventListener('keydown', preventDefaultForScrollKeys, false);
+            }
+
+            window.addEventListener("gamepadconnected", function(e) {
+                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+                e.gamepad.index, e.gamepad.id,
+                e.gamepad.buttons.length, e.gamepad.axes.length);
+            });
+
+            window.addEventListener("gamepaddisconnected", function(e) {
+                console.log("Gamepad disconnected from index %d: %s",
+                e.gamepad.index, e.gamepad.id);
+            });
+
+            let log = false;
+
+            document.getElementById("debugBtn").onclick = function () {
+                log = !log;
+            }
+
+            function listenEvents(obj) {
+                for (var key in obj) {
+                    if (/^on/.test(key)) {
+                        console.log(key.slice(2));
+                        const k = key;
+                        obj.addEventListener(key.slice(2), function(event) {
+                            if (log) {
+                                console.log(k);
+                                console.log(event);
+                            }
+                        });
+                    }
+                }
+            }
+
+            function listenAllEvents() {
+                const result = {};
+                listenEvents(window);
+                const arr = Object.getOwnPropertyNames(window);
+                
+                for (let i = 0; i < arr.length; i++) {
+                    const element = arr[i];
+                    
+                    let resultArray = [];
+
+                    try {
+                        const obj = window[element];
+
+                        if (!obj || !obj['prototype']) {
+                            continue;
+                        }
+
+                        proto = obj['prototype'];
+
+                        listenEvents(proto);
+
+                    } catch (err) {
+                        // console.error(`failed to get events of %o`, element);
+                    }
+                }
+            }
+
+            function logEvent(e) {
+                console.log(e)
+            }
+            
+            //disableScroll();
+
+            /*window.addEventListener('DOMMouseScroll', logEvent, false); // older FF
+            window.addEventListener(wheelEvent, logEvent, wheelOpt); // modern desktop
+            window.addEventListener('touchmove', logEvent, wheelOpt); // mobile
+            window.addEventListener('keydown', logEvent, false);*/
+
+            listenEvents(window);
+            listenEvents(window.body);
+            listenEvents(document.getElementById('GameCanvas'));
+
+            </script>
