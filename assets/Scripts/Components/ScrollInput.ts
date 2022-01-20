@@ -66,6 +66,8 @@ export class ScrollInput extends Component {
         this._scrollDiv.addEventListener('mousemove', (event: MouseEvent) => {
             //log(`${event.x - this._canvasRect.x} ${this._canvasRect.y + this._canvasRect.height - event.y}`);
         })
+
+        this.node.on(Node.EventType.SIZE_CHANGED, this.updateSize.bind(this));
     }
 
     public updateSize() {
