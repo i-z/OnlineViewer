@@ -34,6 +34,8 @@ export class PlayerCameraController extends Component {
     canvas: Node = null;
     @property(ScrollInput)
     scrollInput: ScrollInput = null;
+    @property
+    limitCamera: boolean = true;
 
     private _zoomMax: number = 800;
     private _startPosition: Vec2;
@@ -85,7 +87,8 @@ export class PlayerCameraController extends Component {
 
     scrollBy(d: number, zoomToMouse: boolean) {
         if (!this._zooming) {
-            let newSize = this._scrollOrtographicSize * (d > 0 ? d : 1 / Math.abs(d));
+            const f = (d > 0 ? d : 1 / Math.abs(d));
+            let newSize = this._scrollOrtographicSize * f;
             if (newSize > this._zoomMax || newSize < this.zoomMin) {
                 return;
             }
@@ -98,9 +101,10 @@ export class PlayerCameraController extends Component {
                 const pointY = uipoint.y * 2 / ctr.height;
                 this._zoomPanDirection = (new Vec3(pointX * this._aspectRatio, pointY, 0)).multiplyScalar(- Math.sign(d));
             }
+            this._currentPanSpeed.multiplyScalar(f);
 
             let limitForce: Vec2 = new Vec2();
-            if (d > 0) {
+            if (d > 0 && this.limitCamera) {
                 const cameraWidth = 2 * this._scrollOrtographicSize * this._aspectRatio;
                 const cameraHeight = 2 * this._scrollOrtographicSize;
                 const cameraMinX = this.camera.node.position.x - 0.5 * cameraWidth;
@@ -216,11 +220,13 @@ export class PlayerCameraController extends Component {
             }
         }
 
-        if (2 * this.camera.orthoHeight * this._aspectRatio >= this._cameraLimits.width) {
-            this._currentPanSpeed.x = 0 - this.camera.node.position.x;
-        }
-        if (2 * this.camera.orthoHeight >= this._cameraLimits.height) {
-            this._currentPanSpeed.y = 0 - this.camera.node.position.y;
+        if (this.limitCamera) {
+            if (2 * this.camera.orthoHeight * this._aspectRatio >= this._cameraLimits.width) {
+                this._currentPanSpeed.x = 0 - this.camera.node.position.x;
+            }
+            if (2 * this.camera.orthoHeight >= this._cameraLimits.height) {
+                this._currentPanSpeed.y = 0 - this.camera.node.position.y;
+            }
         }
 
         const positionMultiplier = this.smoothPan || this._panEnd ? (deltaTime * this.panSpeed) : 1;
@@ -239,7 +245,14 @@ export class PlayerCameraController extends Component {
             lim.size = sz;
         }
         //log(`${this.camera.node.position.x} ${this.camera.node.position.y} ${lim.xMin} ${lim.xMax} ${lim.yMin} ${lim.yMax}`);
+        const preClampf = new Vec3(this.camera.node.position);
         this.camera.node.position = new Vec3(misc.clampf(this.camera.node.position.x, lim.xMin, lim.xMax), misc.clampf(this.camera.node.position.y, lim.yMin, lim.yMax), this.camera.node.position.z);
+        if (this.camera.node.position.x != preClampf.x) {
+            this._currentPanSpeed.x = 0;
+        }
+        if (this.camera.node.position.y != preClampf.y) {
+            this._currentPanSpeed.y = 0;
+        }
         if (this._panEnd && this._currentPanSpeed.lengthSqr() < this._epsilon * this._epsilon) {
             this._panning = false;
         }

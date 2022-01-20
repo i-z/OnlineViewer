@@ -158,6 +158,7 @@
     "scrollInput": {
       "__id__": 128
     },
+    "limitCamera": true,
     "_id": "c7orpDTrFCAa6spMPMYAvn"
   },
   {
