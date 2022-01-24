@@ -28,12 +28,14 @@ export class ScrollInput extends Component {
     private _innerDiv: HTMLDivElement = null;
     private _scrollBarSize: number = 0;
     private _canvasRect: DOMRect = null;
+    private _valueY: number = 0;
 
-    public get valueY() : number {
+    public get valueY(): number {
         return this._scrollDiv.scrollTop + this.min;
     }
-    public set valueY(v : number) {
-        this._scrollDiv.scrollTop = v - this.min;
+    public set valueY(v: number) {
+        this._valueY = Math.round(v);
+        this._scrollDiv.scrollTop = Math.round(v) - this.min
     }
 
     onLoad() {
@@ -59,8 +61,10 @@ export class ScrollInput extends Component {
         this.updateSize();
 
         this._scrollDiv.addEventListener('scroll', (event: WheelEvent) => {
-            //log(this._scrollDiv.scrollTop + this.min);
-            this.node.emit(ScrollInputEventType.UPDATE_Y, this._scrollDiv.scrollTop + this.min);
+            if (this._scrollDiv.scrollTop + this.min != this._valueY) {
+                this.node.emit(ScrollInputEventType.UPDATE_Y, this._scrollDiv.scrollTop + this.min);
+                this._valueY = this._scrollDiv.scrollTop + this.min; 
+            }
         })
 
         this._scrollDiv.addEventListener('mousemove', (event: MouseEvent) => {

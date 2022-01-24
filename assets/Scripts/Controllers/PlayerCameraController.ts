@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log, Camera, EventTouch, Vec3, EventMouse, math, MathBase, misc, Vec2, Rect, UITransform, game, director, Canvas, Size, Touch, Label } from 'cc';
+import { _decorator, Component, Node, log, Camera, EventTouch, Vec3, EventMouse, math, MathBase, misc, Vec2, Rect, UITransform, game, director, Canvas, Size, Touch, Label, clamp } from 'cc';
 import { Bounds } from '../Components/Bounds';
 import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 const { ccclass, property } = _decorator;
@@ -75,24 +75,41 @@ export class PlayerCameraController extends Component {
         this._canvasTransform = this.canvas.getComponent(UITransform);
         this._aspectRatio = (this._canvasTransform.width / 2) / this.orthoHeight;
 
+        this.scrollInput.node.on(ScrollInputEventType.UPDATE_Y, (val: number) => {
+            this.orthoHeight = val;
+            this._scrollOrtographicSize = this.orthoHeight;
+        });
+
         const tr = this.limits.getComponent(UITransform);
-        this._cameraLimits = new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height);
-        this._zoomMax = this._cameraLimits.height / 2;
+        this.setLimits(new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height))
+    }
+
+    private updateLimits() {
+        const h = this._cameraLimits.height / this._canvasTransform.height;
+        const w = this._cameraLimits.width / this._canvasTransform.width;
+        if (h > w) {
+            this._zoomMax = this._cameraLimits.height / 2;
+        } else {
+            this._zoomMax = this._cameraLimits.width / this._aspectRatio / 2;
+        }
 
         this.scrollInput.min = this.zoomMin;
         this.scrollInput.max = this._zoomMax;
         this.scrollInput.updateSize();
-        this.scrollInput.node.on(ScrollInputEventType.UPDATE_Y, (val: number) => {
-            this.orthoHeight = val;
-        });
         this.scrollInput.valueY = this.orthoHeight;
+    }
+
+    setLimits(lim: Bounds) {
+        this._cameraLimits = lim;
+        this.updateLimits();
     }
 
     scrollBy(d: number, zoomToMouse: boolean) {
         if (!this._zooming) {
             const f = (d > 0 ? d : 1 / Math.abs(d));
             let newSize = this._scrollOrtographicSize * f;
-            if (newSize > this._zoomMax || newSize < this.zoomMin) {
+            newSize = clamp(newSize, this.zoomMin, this._zoomMax);
+            if (this._scrollOrtographicSize == newSize) {
                 return;
             }
             this._scrollOrtographicSize = newSize;
@@ -133,9 +150,12 @@ export class PlayerCameraController extends Component {
                 limitForce.multiplyScalar(d / this._scrollOrtographicSize);
                 if (2 * this._scrollOrtographicSize * this._aspectRatio > this._cameraLimits.width) {
                     limitForce.x = ((limitMinX - limitMaxX) / 2 - this.camera.node.position.x) / this._scrollOrtographicSize * this._aspectRatio;
+                    log(`x ${limitForce.x}`);
                 }
                 if (2 * this._scrollOrtographicSize > this._cameraLimits.height) {
                     limitForce.y = (this.camera.node.position.y - (limitMinY - limitMaxY) / 2) / this._scrollOrtographicSize;
+                    //this.camera.node.position = new Vec3(this.camera.node.position.x, 0, this.camera.node.position.z);
+                    log(`y ${limitForce.y} ${this.camera.node.position.y}`);
                 }
                 if (limitForce.x != 0) {
                     this._zoomPanDirection.x = limitForce.x;
@@ -240,12 +260,12 @@ export class PlayerCameraController extends Component {
         if (lim.size.x < 0) {
             const sz = lim.size;
             sz.x = 0;
-            lim.size = sz;
+            lim.contentSize = new Vec2(sz.x, sz.y);
         }
         if (lim.size.y < 0) {
             const sz = lim.size;
             sz.y = 0;
-            lim.size = sz;
+            lim.contentSize = new Vec2(sz.x, sz.y);
         }
         //log(`${this.camera.node.position.x} ${this.camera.node.position.y} ${lim.xMin} ${lim.xMax} ${lim.yMin} ${lim.yMax}`);
         const preClampf = new Vec3(this.camera.node.position);
@@ -305,7 +325,13 @@ export class PlayerCameraController extends Component {
     }
     public set orthoHeight(v : number) {
         this.camera.orthoHeight = v;
-        this.currentScale.string = `${ Math.round(this._canvasTransform.height * 100 / this.camera.orthoHeight) }%`
+        this.currentScale.string = `${ Math.round(this._canvasTransform.height * 50 / this.camera.orthoHeight) }%`;
+        this.scrollInput.valueY = this.orthoHeight;
+    }
+
+    setZoom(z: number) {
+        this.orthoHeight = this._canvasTransform.height * 0.5 / z;
+        this._scrollOrtographicSize = this.orthoHeight;
     }
     
 }
