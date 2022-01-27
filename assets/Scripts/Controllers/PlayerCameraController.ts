@@ -88,9 +88,9 @@ export class PlayerCameraController extends Component {
         const h = this._cameraLimits.height / this._canvasTransform.height;
         const w = this._cameraLimits.width / this._canvasTransform.width;
         if (h > w) {
-            this._zoomMax = this._cameraLimits.height / 2;
+            this._zoomMax = Math.max(this._cameraLimits.height / 2, this._canvasTransform.height / 2);
         } else {
-            this._zoomMax = this._cameraLimits.width / this._aspectRatio / 2;
+            this._zoomMax = Math.max(this._cameraLimits.width / this._aspectRatio / 2, this._canvasTransform.width / this._aspectRatio / 2);
         }
 
         this.scrollInput.min = this.zoomMin;
@@ -122,48 +122,6 @@ export class PlayerCameraController extends Component {
                 this._zoomPanDirection = (new Vec3(pointX * this._aspectRatio, pointY, 0)).multiplyScalar(- Math.sign(d));
             }
             this._currentPanSpeed.multiplyScalar(f);
-
-            let limitForce: Vec2 = new Vec2();
-            if (d > 0 && this.limitCamera) {
-                const cameraWidth = 2 * this._scrollOrtographicSize * this._aspectRatio;
-                const cameraHeight = 2 * this._scrollOrtographicSize;
-                const cameraMinX = this.camera.node.position.x - 0.5 * cameraWidth;
-                const cameraMinY = this.camera.node.position.y - 0.5 * cameraHeight;
-                const cameraMaxX = this.camera.node.position.x + 0.5 * cameraWidth;
-                const cameraMaxY = this.camera.node.position.y + 0.5 * cameraHeight;
-                const limitMinX = this._cameraLimits.x;
-                const limitMinY = this._cameraLimits.y;
-                const limitMaxX = this._cameraLimits.x + this._cameraLimits.width;
-                const limitMaxY = this._cameraLimits.y + this._cameraLimits.height;
-                if (cameraMinX < limitMinX) {
-                    limitForce.add(new Vec2(limitMinX - cameraMinX, 0));
-                }
-                if (cameraMinY < limitMinY) {
-                    limitForce.add(new Vec2(0, limitMinY - cameraMinY));
-                }
-                if (cameraMaxX > limitMaxX) {
-                    limitForce.add(new Vec2(limitMaxX - cameraMaxX, 0));
-                }
-                if (cameraMaxY > limitMaxY) {
-                    limitForce.add(new Vec2(0, limitMaxY - cameraMaxY));
-                }
-                limitForce.multiplyScalar(d / this._scrollOrtographicSize);
-                if (2 * this._scrollOrtographicSize * this._aspectRatio > this._cameraLimits.width) {
-                    limitForce.x = ((limitMinX - limitMaxX) / 2 - this.camera.node.position.x) / this._scrollOrtographicSize * this._aspectRatio;
-                    log(`x ${limitForce.x}`);
-                }
-                if (2 * this._scrollOrtographicSize > this._cameraLimits.height) {
-                    limitForce.y = (this.camera.node.position.y - (limitMinY - limitMaxY) / 2) / this._scrollOrtographicSize;
-                    //this.camera.node.position = new Vec3(this.camera.node.position.x, 0, this.camera.node.position.z);
-                    log(`y ${limitForce.y} ${this.camera.node.position.y}`);
-                }
-                if (limitForce.x != 0) {
-                    this._zoomPanDirection.x = limitForce.x;
-                }
-                if (limitForce.y != 0) {
-                    this._zoomPanDirection.y = limitForce.y;
-                }
-            }
             this._zooming = true;
         }
     }
@@ -255,21 +213,9 @@ export class PlayerCameraController extends Component {
         const positionMultiplier = this.smoothPan || this._panEnd ? (deltaTime * this.panSpeed) : 1;
         this.camera.node.position.add(new Vec3(this._currentPanSpeed.x, this._currentPanSpeed.y, 0).multiplyScalar(positionMultiplier));
 
-        const lim = new Bounds(this._cameraLimits);
-        lim.contentSize = lim.contentSize.subtract(new Vec2(2 * this.orthoHeight * this._aspectRatio, 2 * this.orthoHeight));
-        if (lim.size.x < 0) {
-            const sz = lim.size;
-            sz.x = 0;
-            lim.contentSize = new Vec2(sz.x, sz.y);
-        }
-        if (lim.size.y < 0) {
-            const sz = lim.size;
-            sz.y = 0;
-            lim.contentSize = new Vec2(sz.x, sz.y);
-        }
         //log(`${this.camera.node.position.x} ${this.camera.node.position.y} ${lim.xMin} ${lim.xMax} ${lim.yMin} ${lim.yMax}`);
         const preClampf = new Vec3(this.camera.node.position);
-        this.camera.node.position = new Vec3(misc.clampf(this.camera.node.position.x, lim.xMin, lim.xMax), misc.clampf(this.camera.node.position.y, lim.yMin, lim.yMax), this.camera.node.position.z);
+        this.cameraPosition = this.camera.node.position;
         if (this.camera.node.position.x != preClampf.x) {
             this._currentPanSpeed.x = 0;
         }
@@ -323,10 +269,29 @@ export class PlayerCameraController extends Component {
     public get orthoHeight() : number {
         return this.camera.orthoHeight;
     }
+
     public set orthoHeight(v : number) {
         this.camera.orthoHeight = v;
         this.currentScale.string = `${ Math.round(this._canvasTransform.height * 50 / this.camera.orthoHeight) }%`;
         this.scrollInput.valueY = this.orthoHeight;
+
+        this.cameraPosition = this.camera.node.position;
+    }
+
+    private set cameraPosition(pos: Vec3) {
+        const lim = new Bounds(this._cameraLimits);
+        lim.contentSize = lim.contentSize.subtract(new Vec2(2 * this.orthoHeight * this._aspectRatio, 2 * this.orthoHeight));
+        if (lim.size.x < 0) {
+            const sz = lim.size;
+            sz.x = 0;
+            lim.contentSize = new Vec2(sz.x, sz.y);
+        }
+        if (lim.size.y < 0) {
+            const sz = lim.size;
+            sz.y = 0;
+            lim.contentSize = new Vec2(sz.x, sz.y);
+        }
+        this.camera.node.position = new Vec3(misc.clampf(this.camera.node.position.x, lim.xMin, lim.xMax), misc.clampf(this.camera.node.position.y, lim.yMin, lim.yMax), this.camera.node.position.z);
     }
 
     setZoom(z: number) {

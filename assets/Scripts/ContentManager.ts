@@ -58,7 +58,7 @@ export class ContentManager extends Component {
                     this.camera.setZoom(1);
                     this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
                     const margin = 10;
-                    this.camera.setLimits(new Bounds(Math.min(-ctr.width / 2, -spriteFrame.width / 2 - margin), Math.min(-ctr.height / 2, -spriteFrame.height / 2 - margin), Math.max(ctr.width, spriteFrame.width + 2 * margin), Math.max(ctr.height, spriteFrame.height + 2 * margin)));
+                    this.camera.setLimits(new Bounds(-spriteFrame.width / 2 - margin, -spriteFrame.height / 2 - margin, spriteFrame.width + 2 * margin, spriteFrame.height + 2 * margin));
                 });
             }
         });
