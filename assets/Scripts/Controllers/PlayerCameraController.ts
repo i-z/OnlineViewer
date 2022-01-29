@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log, Camera, EventTouch, Vec3, EventMouse, math, MathBase, misc, Vec2, Rect, UITransform, game, director, Canvas, Size, Touch, Label, clamp } from 'cc';
+import { _decorator, Component, Node, log, Camera, EventTouch, Vec3, EventMouse, math, MathBase, misc, Vec2, Rect, UITransform, game, director, Canvas, Size, Touch, Label, clamp, view } from 'cc';
 import { Bounds } from '../Components/Bounds';
 import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 const { ccclass, property } = _decorator;
@@ -30,8 +30,6 @@ export class PlayerCameraController extends Component {
     camera: Camera = null;
     @property(Node)
     limits: Node = null;
-    @property(Node)
-    canvas: Node = null;
     @property(ScrollInput)
     scrollInput: ScrollInput = null;
     @property
@@ -55,7 +53,6 @@ export class PlayerCameraController extends Component {
     private _previousDistance: number = 0;
     private _touches: Touch[] = [];
     private _fistTouchId: number = -1;
-    private _canvasTransform: UITransform = null;
 
     public get worldMousePosition(): Vec2 {
         const p = this.camera.screenToWorld(new Vec3(this._mousePosition.x, this._mousePosition.y, 0));
@@ -72,8 +69,7 @@ export class PlayerCameraController extends Component {
         }
         this._scrollOrtographicSize = this.orthoHeight;
 
-        this._canvasTransform = this.canvas.getComponent(UITransform);
-        this._aspectRatio = (this._canvasTransform.width / 2) / this.orthoHeight;
+        this._aspectRatio = view.getVisibleSizeInPixel().width / view.getVisibleSizeInPixel().height;
 
         this.scrollInput.node.on(ScrollInputEventType.UPDATE_Y, (val: number) => {
             this.orthoHeight = val;
@@ -81,16 +77,22 @@ export class PlayerCameraController extends Component {
         });
 
         const tr = this.limits.getComponent(UITransform);
-        this.setLimits(new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height))
+        this.setLimits(new Bounds(this.limits.position.x - tr.width * tr.anchorX, this.limits.position.y - tr.height * tr.anchorY, tr.width, tr.height));
+
+        view.on('canvas-resize', () => {
+            this._aspectRatio = view.getVisibleSizeInPixel().width / view.getVisibleSizeInPixel().height;
+            this.updateLimits();
+        });
     }
 
     private updateLimits() {
-        const h = this._cameraLimits.height / this._canvasTransform.height;
-        const w = this._cameraLimits.width / this._canvasTransform.width;
+        const canvasSize: Size = new Size((view.getVisibleSizeInPixel().width / devicePixelRatio), (view.getVisibleSizeInPixel().height / devicePixelRatio));
+        const w = this._cameraLimits.width / canvasSize.width;
+        const h = this._cameraLimits.height / canvasSize.height;
         if (h > w) {
-            this._zoomMax = Math.max(this._cameraLimits.height / 2, this._canvasTransform.height / 2);
+            this._zoomMax = Math.max(this._cameraLimits.height / 2, canvasSize.height / 2);
         } else {
-            this._zoomMax = Math.max(this._cameraLimits.width / this._aspectRatio / 2, this._canvasTransform.width / this._aspectRatio / 2);
+            this._zoomMax = Math.max(this._cameraLimits.width / this._aspectRatio / 2, canvasSize.width / this._aspectRatio / 2);
         }
 
         this.scrollInput.min = this.zoomMin;
@@ -116,9 +118,8 @@ export class PlayerCameraController extends Component {
 
             if (zoomToMouse) {
                 const uipoint = this.camera.convertToUINode(new Vec3(this.worldMousePosition.x, this.worldMousePosition.y, 0), this.touchInputPanel);
-                const ctr = this.canvas.getComponent(UITransform);
-                const pointX = uipoint.x * 2 / ctr.width;
-                const pointY = uipoint.y * 2 / ctr.height;
+                const pointX = uipoint.x * 2 / (view.getVisibleSizeInPixel().width / devicePixelRatio);
+                const pointY = uipoint.y * 2 / (view.getVisibleSizeInPixel().height / devicePixelRatio);
                 this._zoomPanDirection = (new Vec3(pointX * this._aspectRatio, pointY, 0)).multiplyScalar(- Math.sign(d));
             }
             this._currentPanSpeed.multiplyScalar(f);
@@ -266,13 +267,13 @@ export class PlayerCameraController extends Component {
         this._mousePosition.y = event.getLocationY();
     }
 
-    public get orthoHeight() : number {
+    public get orthoHeight(): number {
         return this.camera.orthoHeight;
     }
 
-    public set orthoHeight(v : number) {
+    public set orthoHeight(v: number) {
         this.camera.orthoHeight = v;
-        this.currentScale.string = `${ Math.round(this._canvasTransform.height * 50 / this.camera.orthoHeight) }%`;
+        this.currentScale.string = `${Math.round((view.getVisibleSizeInPixel().height / devicePixelRatio) * 50 / this.camera.orthoHeight)}%`;
         this.scrollInput.valueY = this.orthoHeight;
 
         this.cameraPosition = this.camera.node.position;
@@ -295,9 +296,9 @@ export class PlayerCameraController extends Component {
     }
 
     setZoom(z: number) {
-        this.orthoHeight = this._canvasTransform.height * 0.5 / z;
+        this.orthoHeight = view.getVisibleSizeInPixel().height / devicePixelRatio * 0.5 / z;
         this._scrollOrtographicSize = this.orthoHeight;
     }
-    
+
 }
 

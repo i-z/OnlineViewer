@@ -25,6 +25,7 @@ export class ScrollInput extends Component {
     canvasPosition: Vec2 = new Vec2(1, 0);
 
     private _scrollDiv: HTMLDivElement = null;
+    private _scrollBorderDiv: HTMLDivElement = null;
     private _innerDiv: HTMLDivElement = null;
     private _scrollBarSize: number = 0;
     private _canvasRect: DOMRect = null;
@@ -47,6 +48,16 @@ export class ScrollInput extends Component {
         this._scrollDiv.style.left = `0px`;
         this._scrollDiv.style.top = `0px`;
         this._scrollDiv.style.overflow = "scroll";
+        this._scrollDiv.style.opacity = "0";
+
+        this._scrollBorderDiv = document.createElement("div");
+        this._scrollBorderDiv.id = "scrollBorderDiv";
+        this._scrollBorderDiv.style.width = `${this.width}px`;
+        this._scrollBorderDiv.style.height = `${this.height}px`;
+        this._scrollBorderDiv.style.position = "absolute";
+        this._scrollBorderDiv.style.left = `0px`;
+        this._scrollBorderDiv.style.top = `0px`;
+        this._scrollBorderDiv.style.border = "1px solid";
 
         this._innerDiv = document.createElement("div");
         this._innerDiv.style.height = `${this.height}px`;
@@ -55,6 +66,7 @@ export class ScrollInput extends Component {
         this._innerDiv.style.backgroundSize = "20px 20px";
 
         this._scrollDiv.appendChild(this._innerDiv);
+        document.body.appendChild(this._scrollBorderDiv);
         document.body.appendChild(this._scrollDiv);
         this._scrollBarSize = this._scrollDiv.offsetHeight - this._scrollDiv.clientHeight;
 
@@ -83,5 +95,9 @@ export class ScrollInput extends Component {
         this._innerDiv.style.height = `${this._scrollDiv.offsetHeight - this._scrollBarSize + (this.max - this.min)}px`;
         this._scrollDiv.style.left = `${this._canvasRect.x + this.canvasPosition.x * (this._canvasRect.width - this._scrollDiv.offsetWidth)}px`;
         this._scrollDiv.style.top = `${this._canvasRect.y + (1 - this.canvasPosition.y) * (this._canvasRect.height - this._scrollDiv.offsetHeight)}px`;
+        this._scrollBorderDiv.style.width = `${this.width}px`;
+        this._scrollBorderDiv.style.height = `${this.height}px`;
+        this._scrollBorderDiv.style.left = this._scrollDiv.style.left;
+        this._scrollBorderDiv.style.top = this._scrollDiv.style.top
     }
 }

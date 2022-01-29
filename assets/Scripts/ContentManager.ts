@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D } from 'cc';
+import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view } from 'cc';
 import { ListScrollView, ListScrollViewEvent } from './ListScrollView';
 import { PaginatedListScrollView } from './PaginatedListScrollView';
 import { DownloadedSpriteFrame, PhotoDownloader } from './PhotoDownloader';
@@ -33,10 +33,11 @@ export class ContentManager extends Component {
     @property(PlayerCameraController)
     camera: PlayerCameraController = null;
 
-    @property(Canvas)
-    canvas: Canvas;
-
     private _data: string[] = []
+    private _selectedIdx: number = 0;
+    get selectedIndex(): number {
+        return this._selectedIdx;
+    }
 
     start() {
         this.inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
@@ -47,20 +48,7 @@ export class ContentManager extends Component {
         });
 
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
-            if (idx < this._data.length) {
-                //this.photoDownloader.downloadAndShow(this._data[idx]);
-
-                this.photoDownloader.downloadPhoto(this._data[idx]).then((spriteFrame: DownloadedSpriteFrame) => {
-                    this.targetSprite.spriteFrame = spriteFrame.spriteFrame;
-                    const transform = this.targetSprite.node.getComponent(UITransform);
-                    transform.setContentSize(spriteFrame.width, spriteFrame.height);
-                    const ctr = this.canvas.getComponent(UITransform)
-                    this.camera.setZoom(1);
-                    this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
-                    const margin = 10;
-                    this.camera.setLimits(new Bounds(-spriteFrame.width / 2 - margin, -spriteFrame.height / 2 - margin, spriteFrame.width + 2 * margin, spriteFrame.height + 2 * margin));
-                });
-            }
+            this.loadPhotoWithIdx(idx);
         });
 
         this.textFileInput.node.on(FileInputEventType.DATA_RECEIVED, (str: string) => {
@@ -73,9 +61,45 @@ export class ContentManager extends Component {
         })
     }
 
+    loadPhotoWithIdx(idx: number) {
+        if (idx < this._data.length) {
+            this._selectedIdx = idx;
+            //this.photoDownloader.downloadAndShow(this._data[idx]);
+
+            this.photoDownloader.downloadPhoto(this._data[idx]).then((spriteFrame: DownloadedSpriteFrame) => {
+                this.targetSprite.spriteFrame = spriteFrame.spriteFrame;
+                const transform = this.targetSprite.node.getComponent(UITransform);
+                transform.setContentSize(spriteFrame.width, spriteFrame.height);
+                this.camera.setZoom(1);
+                this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
+                const margin = 70;
+                this.camera.setLimits(new Bounds(-spriteFrame.width / 2 - margin, -spriteFrame.height / 2 - margin, spriteFrame.width + 2 * margin, spriteFrame.height + 2 * margin));
+            });
+        }
+    }
+
     processData(str: string) {
         this._data = str.split(/\r?\n/);
         log(this._data.length);
         this.listScroll.setData(this._data);
+    }
+
+    next() {
+        log(this._selectedIdx + 1);
+        if (this._selectedIdx + 1 < this._data.length) {
+            this.loadPhotoWithIdx(this._selectedIdx + 1);
+        }
+    }
+
+    previous() {
+        log(this._selectedIdx - 1);
+        if (this._selectedIdx - 1 >= 0) {
+            this.loadPhotoWithIdx(this._selectedIdx - 1);
+        }
+    }
+
+    setZoom(event: EventTouch, zoom: number) {
+        log(zoom);
+        this.camera.setZoom(zoom);
     }
 }

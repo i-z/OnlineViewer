@@ -1,13 +1,14 @@
 
-import { _decorator, Component, Node, Prefab, instantiate } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2 } from 'cc';
 import { ListItem, ListItemEvent } from './ListItem';
-const { ccclass, property } = _decorator;
+const { ccclass, property, requireComponent } = _decorator;
 
 export enum ListScrollViewEvent {
     SELECT_ITEM = 'select item'
 }
  
 @ccclass('ListScrollView')
+@requireComponent(ScrollView)
 export class ListScrollView extends Component {
 
     @property(Node)
@@ -16,7 +17,10 @@ export class ListScrollView extends Component {
     @property(Prefab)
     itemPrefab: Prefab;
 
-    start () {
+    private _scrollView: ScrollView = null;
+
+    onLoad () {
+        this._scrollView = this.getComponent(ScrollView)
     }
 
     setData(data: string[], offset?: number) {
@@ -40,5 +44,6 @@ export class ListScrollView extends Component {
                 });
             }
         }
+        this._scrollView.scrollTo(new Vec2(0, 1));
     }
 }
