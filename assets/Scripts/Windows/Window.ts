@@ -1,7 +1,7 @@
-import { _decorator, Component, Enum, tween, Node, UIOpacity, Tween, Vec3, Animation, log } from 'cc';
-const { ccclass, property } = _decorator;
+import { _decorator, Component, Enum, tween, Node, UIOpacity, Tween, Vec3, Animation, log, UITransform, Size, Widget } from 'cc';
+const { ccclass, property, requireComponent } = _decorator;
 import WindowDirector from './WindowDirector';
-import { WindowTransitionBase } from './WindowTransitionBase';
+import { WindowTransitionBase} from './WindowTransitionBase';
 
 export enum WindowState {
     CLOSED,
@@ -23,11 +23,18 @@ export enum WindowEventType {
 }
 
 @ccclass('Window')
+@requireComponent(UITransform)
+@requireComponent(Widget)
 export default class Window extends Component {
     @property({ type: Enum(WindowBehaviour) })
     behaviour: WindowBehaviour = WindowBehaviour.MODAL;
 
     private _state: WindowState = WindowState.CLOSED;
+    private _transform: UITransform = null;
+
+    onLoad() {
+        this._transform = this.getComponent(UITransform);
+    }
 
     show(tr: WindowTransitionBase): boolean {
         if (this.getState() == WindowState.CLOSED) {
@@ -88,4 +95,15 @@ export default class Window extends Component {
         this.node.emit(WindowEventType.CLOSED);
         this.node.active = false;
     }
+
+    private _windowSize : Size;
+    public get windowSize() : Size {
+        return this._transform.contentSize;
+    }
+    public set windowSize(v : Size) {
+        this._transform.contentSize = v;
+        const w =this.getComponent(Widget);
+        w.updateAlignment();
+    }
+    
 }

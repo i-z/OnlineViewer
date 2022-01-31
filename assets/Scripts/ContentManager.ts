@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view } from 'cc';
+import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view, Vec2 } from 'cc';
 import { ListScrollView, ListScrollViewEvent } from './ListScrollView';
 import { PaginatedListScrollView } from './PaginatedListScrollView';
 import { DownloadedSpriteFrame, PhotoDownloader } from './PhotoDownloader';
@@ -10,6 +10,8 @@ import { MainScene, MainSceneEventType } from './MainScene';
 import { FileInput, FileInputEventType } from './Components/FileInput';
 import { PlayerCameraController } from './Controllers/PlayerCameraController';
 import { Bounds } from './Components/Bounds';
+import LocalSettings, { InitialZoomType, Settings } from './Config/LocalSettings';
+import { SettingsWindow, SettingsWindowEventType } from './AppWindows/SettingsWindow';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -64,16 +66,31 @@ export class ContentManager extends Component {
     loadPhotoWithIdx(idx: number) {
         if (idx < this._data.length) {
             this._selectedIdx = idx;
-            //this.photoDownloader.downloadAndShow(this._data[idx]);
 
             this.photoDownloader.downloadPhoto(this._data[idx]).then((spriteFrame: DownloadedSpriteFrame) => {
                 this.targetSprite.spriteFrame = spriteFrame.spriteFrame;
                 const transform = this.targetSprite.node.getComponent(UITransform);
                 transform.setContentSize(spriteFrame.width, spriteFrame.height);
-                this.camera.setZoom(1);
-                this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
+
                 const margin = 70;
                 this.camera.setLimits(new Bounds(-spriteFrame.width / 2 - margin, -spriteFrame.height / 2 - margin, spriteFrame.width + 2 * margin, spriteFrame.height + 2 * margin));
+                switch (LocalSettings.instance.initialZoom) {
+                    case InitialZoomType.CENTERED:
+                        this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
+                        this.camera.setZoom(1);
+                        break;
+                    case InitialZoomType.FIT:
+                        this.camera.node.position = new Vec3(0, 0, this.camera.node.position.z);
+                        this.camera.setFitZoom();
+                        break;
+                    case InitialZoomType.COMICS:
+                        this.camera.setZoom(1);
+                        this.camera.setPercentPosition(new Vec2(0, 1));
+                        break;
+
+                    default:
+                        break;
+                }
             });
         }
     }
@@ -101,5 +118,13 @@ export class ContentManager extends Component {
     setZoom(event: EventTouch, zoom: number) {
         log(zoom);
         this.camera.setZoom(zoom);
+    }
+
+    makeFavorite() {
+        const wnd: SettingsWindow = WindowDirector.instance.openWindow('settings') as SettingsWindow;
+        wnd.updateSettings(LocalSettings.instance.settings);
+        wnd.node.on(SettingsWindowEventType.SAVE_SETTINGS, (setttings: Settings) => {
+            LocalSettings.instance.settings = setttings;
+        });
     }
 }

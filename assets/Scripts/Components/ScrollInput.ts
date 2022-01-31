@@ -52,8 +52,8 @@ export class ScrollInput extends Component {
 
         this._scrollBorderDiv = document.createElement("div");
         this._scrollBorderDiv.id = "scrollBorderDiv";
-        this._scrollBorderDiv.style.width = `${this.width}px`;
-        this._scrollBorderDiv.style.height = `${this.height}px`;
+        this._scrollBorderDiv.style.width = `${this.width - 2}px`;
+        this._scrollBorderDiv.style.height = `${this.height - 2}px`;
         this._scrollBorderDiv.style.position = "absolute";
         this._scrollBorderDiv.style.left = `0px`;
         this._scrollBorderDiv.style.top = `0px`;
@@ -95,8 +95,8 @@ export class ScrollInput extends Component {
         this._innerDiv.style.height = `${this._scrollDiv.offsetHeight - this._scrollBarSize + (this.max - this.min)}px`;
         this._scrollDiv.style.left = `${this._canvasRect.x + this.canvasPosition.x * (this._canvasRect.width - this._scrollDiv.offsetWidth)}px`;
         this._scrollDiv.style.top = `${this._canvasRect.y + (1 - this.canvasPosition.y) * (this._canvasRect.height - this._scrollDiv.offsetHeight)}px`;
-        this._scrollBorderDiv.style.width = `${this.width}px`;
-        this._scrollBorderDiv.style.height = `${this.height}px`;
+        this._scrollBorderDiv.style.width = `${this.width - 2}px`;
+        this._scrollBorderDiv.style.height = `${this.height - 2}px`;
         this._scrollBorderDiv.style.left = this._scrollDiv.style.left;
         this._scrollBorderDiv.style.top = this._scrollDiv.style.top
     }

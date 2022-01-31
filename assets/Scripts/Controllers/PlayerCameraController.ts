@@ -282,6 +282,7 @@ export class PlayerCameraController extends Component {
     private set cameraPosition(pos: Vec3) {
         const lim = new Bounds(this._cameraLimits);
         lim.contentSize = lim.contentSize.subtract(new Vec2(2 * this.orthoHeight * this._aspectRatio, 2 * this.orthoHeight));
+        //log(`lim ${lim.x} ${lim.y} ${lim.size.x} ${lim.size.y}`);
         if (lim.size.x < 0) {
             const sz = lim.size;
             sz.x = 0;
@@ -292,12 +293,25 @@ export class PlayerCameraController extends Component {
             sz.y = 0;
             lim.contentSize = new Vec2(sz.x, sz.y);
         }
-        this.camera.node.position = new Vec3(misc.clampf(this.camera.node.position.x, lim.xMin, lim.xMax), misc.clampf(this.camera.node.position.y, lim.yMin, lim.yMax), this.camera.node.position.z);
+        this.camera.node.position = new Vec3(misc.clampf(pos.x, lim.xMin, lim.xMax), misc.clampf(pos.y, lim.yMin, lim.yMax), this.camera.node.position.z);
+        //log(`${this.camera.node.position.x} ${this.camera.node.position.y}`);
+        //log(`x ${view.getVisibleOrigin().x} ${view.getVisibleOrigin().y}`);
     }
 
     setZoom(z: number) {
         this.orthoHeight = view.getVisibleSizeInPixel().height / devicePixelRatio * 0.5 / z;
         this._scrollOrtographicSize = this.orthoHeight;
+    }
+
+    setFitZoom() {
+        this.orthoHeight = this._zoomMax;
+    }
+
+    setPercentPosition(pos: Vec2) {
+        const nep = new Vec3(this._cameraLimits.x + pos.x * this._cameraLimits.width,this._cameraLimits.y + pos.y * this._cameraLimits.height,  this.node.position.z);
+        //log(`${nep.x} ${nep.y}`);
+        this.cameraPosition = nep;
+        //log(`${this.camera.node.position.x} ${this.camera.node.position.y}`);
     }
 
 }

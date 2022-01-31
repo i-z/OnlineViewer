@@ -1,6 +1,7 @@
 
 import { _decorator, Component, Node, director, assert, log } from 'cc';
 import { WindowManager } from './WindowManager';
+import Window from './Window';
 const { ccclass, property } = _decorator;
 
 
@@ -28,10 +29,10 @@ export default class WindowDirector {
         }
     }
 
-    openWindow(name: string) {
+    openWindow(name: string): Window {
         assert(this._initialized, "WindowManager not initilized");
         assert(this._windowManager, "WindowManager doesn't exist");
-        this._windowManager.openWindow(name);
+        return this._windowManager.openWindow(name);
     }
 
     closeWindow(name: string) {

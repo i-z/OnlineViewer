@@ -1,5 +1,6 @@
 
 import { _decorator, Component, Node, log } from 'cc';
+import LocalSettings from './Config/LocalSettings';
 import ScreenDirector from './Screens/ScreenDirector';
 import WindowDirector from './Windows/WindowDirector';
 const { ccclass, property } = _decorator;
@@ -12,6 +13,7 @@ export enum MainSceneEventType {
 export class MainScene extends Component {
 
     start () {
+        LocalSettings.instance.init();
         WindowDirector.instance.init();
     }
 
