@@ -1,17 +1,16 @@
 
 import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view, Vec2 } from 'cc';
-import { ListScrollView, ListScrollViewEvent } from './ListScrollView';
-import { PaginatedListScrollView } from './PaginatedListScrollView';
+import { ListScrollView, ListScrollViewEvent } from '../Components/ListScrollView';
+import { PaginatedListScrollView } from '../Components/PaginatedListScrollView';
 import { DownloadedSpriteFrame, PhotoDownloader } from './PhotoDownloader';
-import { InputWindow, InputWindowEvents } from './AppWindows/InputWindow';
-import WindowDirector from './Windows/WindowDirector';
-import { WindowManager } from './Windows/WindowManager';
-import { MainScene, MainSceneEventType } from './MainScene';
-import { FileInput, FileInputEventType } from './Components/FileInput';
-import { PlayerCameraController } from './Controllers/PlayerCameraController';
-import { Bounds } from './Components/Bounds';
-import LocalSettings, { InitialZoomType, Settings } from './Config/LocalSettings';
-import { SettingsWindow, SettingsWindowEventType } from './AppWindows/SettingsWindow';
+import { InputWindow, InputWindowEvents } from '../AppWindows/InputWindow';
+import WindowDirector from '../Windows/WindowDirector';
+import { MainScene, MainSceneEventType } from '../Scenes/MainScene';
+import { FileInput, FileInputEventType } from '../Components/FileInput';
+import { PlayerCameraManager } from './PlayerCameraManager';
+import { Bounds } from '../Components/Bounds';
+import LocalSettings, { InitialZoomType, Settings } from '../Config/LocalSettings';
+import { SettingsWindow, SettingsWindowEventType } from '../AppWindows/SettingsWindow';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -32,8 +31,8 @@ export class ContentManager extends Component {
     @property(Sprite)
     targetSprite: Sprite = null;
 
-    @property(PlayerCameraController)
-    camera: PlayerCameraController = null;
+    @property(PlayerCameraManager)
+    camera: PlayerCameraManager = null;
 
     private _data: string[] = []
     private _selectedIdx: number = 0;

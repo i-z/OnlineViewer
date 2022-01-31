@@ -5,8 +5,8 @@ import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 const { ccclass, property } = _decorator;
 
 
-@ccclass('PlayerCameraController')
-export class PlayerCameraController extends Component {
+@ccclass('PlayerCameraManager')
+export class PlayerCameraManager extends Component {
     @property
     zoomMin: number = 10;
     @property
