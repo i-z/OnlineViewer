@@ -11,6 +11,7 @@ import { PlayerCameraManager } from './PlayerCameraManager';
 import { Bounds } from '../Components/Bounds';
 import LocalSettings, { InitialZoomType, Settings } from '../Config/LocalSettings';
 import { SettingsWindow, SettingsWindowEventType } from '../AppWindows/SettingsWindow';
+import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -33,6 +34,9 @@ export class ContentManager extends Component {
 
     @property(PlayerCameraManager)
     camera: PlayerCameraManager = null;
+
+    @property(ScrollInput)
+    scrollInput: ScrollInput = null;
 
     private _data: string[] = []
     private _selectedIdx: number = 0;
@@ -59,7 +63,16 @@ export class ContentManager extends Component {
         const scene = this.getComponent(MainScene);
         scene.node.on(MainSceneEventType.FILE_INPUT_REQUESTED, () => {
             this.textFileInput.request();
-        })
+        });
+
+        this.scrollInput.node.on(ScrollInputEventType.UPDATE_X, (val: number) => {
+            log(`JOYSTICK X ${val}`);
+            if (val > 0) {
+                this.next();
+            } else if (val < 1) {
+                this.previous();
+            }
+        });
     }
 
     loadPhotoWithIdx(idx: number) {
@@ -96,8 +109,13 @@ export class ContentManager extends Component {
 
     processData(str: string) {
         this._data = str.split(/\r?\n/);
-        log(this._data.length);
+        this.trimEmptyEnd();
         this.listScroll.setData(this._data);
+    }
+
+    private trimEmptyEnd() {
+        while (this._data[this._data.length - 1].length <= 0)
+            this._data.pop();
     }
 
     next() {
