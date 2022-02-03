@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view, Vec2 } from 'cc';
+import { _decorator, Component, Node, log, EditBox, Input, HtmlTextParser, EventMouse, EventKeyboard, systemEvent, input, Sprite, SpriteFrame, UITransform, Canvas, Vec3, SpringJoint2D, EventTouch, view, Vec2, Label } from 'cc';
 import { ListScrollView, ListScrollViewEvent } from '../Components/ListScrollView';
 import { PaginatedListScrollView } from '../Components/PaginatedListScrollView';
 import { DownloadedSpriteFrame, PhotoDownloader } from './PhotoDownloader';
@@ -38,6 +38,12 @@ export class ContentManager extends Component {
     @property(ScrollInput)
     scrollInput: ScrollInput = null;
 
+    @property(Label)
+    currentIndex: Label = null;
+
+    @property(Label)
+    fileName: Label = null;
+
     private _data: string[] = []
     private _selectedIdx: number = 0;
     get selectedIndex(): number {
@@ -58,6 +64,7 @@ export class ContentManager extends Component {
 
         this.textFileInput.node.on(FileInputEventType.DATA_RECEIVED, (str: string) => {
             this.processData(str);
+            this.fileName.string = this.textFileInput.currentFileName;
         });
 
         const scene = this.getComponent(MainScene);
@@ -78,6 +85,7 @@ export class ContentManager extends Component {
     loadPhotoWithIdx(idx: number) {
         if (idx < this._data.length) {
             this._selectedIdx = idx;
+            this.currentIndex.string = String(this._selectedIdx + 1);
 
             this.photoDownloader.downloadPhoto(this._data[idx]).then((spriteFrame: DownloadedSpriteFrame) => {
                 this.targetSprite.spriteFrame = spriteFrame.spriteFrame;
@@ -119,21 +127,21 @@ export class ContentManager extends Component {
     }
 
     next() {
-        log(this._selectedIdx + 1);
+        //log(this._selectedIdx + 1);
         if (this._selectedIdx + 1 < this._data.length) {
             this.loadPhotoWithIdx(this._selectedIdx + 1);
         }
     }
 
     previous() {
-        log(this._selectedIdx - 1);
+        //log(this._selectedIdx - 1);
         if (this._selectedIdx - 1 >= 0) {
             this.loadPhotoWithIdx(this._selectedIdx - 1);
         }
     }
 
     setZoom(event: EventTouch, zoom: number) {
-        log(zoom);
+        //log(zoom);
         this.camera.setZoom(zoom);
     }
 
