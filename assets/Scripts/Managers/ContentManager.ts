@@ -146,10 +146,5 @@ export class ContentManager extends Component {
     }
 
     makeFavorite() {
-        const wnd: SettingsWindow = WindowDirector.instance.openWindow('settings') as SettingsWindow;
-        wnd.updateSettings(LocalSettings.instance.settings);
-        wnd.node.on(SettingsWindowEventType.SAVE_SETTINGS, (setttings: Settings) => {
-            LocalSettings.instance.settings = setttings;
-        });
     }
 }
