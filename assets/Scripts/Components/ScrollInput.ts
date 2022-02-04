@@ -3,7 +3,8 @@ import { _decorator, Component, Node, log, EventMouse, UITransform, Vec2, direct
 const { ccclass, property } = _decorator;
 
 export enum ScrollInputEventType {
-    UPDATE_Y = 'update_y'
+    UPDATE_Y = 'update_y',
+    UPDATE_X = 'update_x'
 }
 
 @ccclass('ScrollInput')
@@ -25,10 +26,13 @@ export class ScrollInput extends Component {
     canvasPosition: Vec2 = new Vec2(1, 0);
 
     private _scrollDiv: HTMLDivElement = null;
+    private _scrollBorderDiv: HTMLDivElement = null;
     private _innerDiv: HTMLDivElement = null;
     private _scrollBarSize: number = 0;
     private _canvasRect: DOMRect = null;
     private _valueY: number = 0;
+    private _riseXTime: Date = new Date();
+    private readonly _XRollbackTime: number = 1000;
 
     public get valueY(): number {
         return this._scrollDiv.scrollTop + this.min;
@@ -47,6 +51,16 @@ export class ScrollInput extends Component {
         this._scrollDiv.style.left = `0px`;
         this._scrollDiv.style.top = `0px`;
         this._scrollDiv.style.overflow = "scroll";
+        this._scrollDiv.style.opacity = "0";
+
+        this._scrollBorderDiv = document.createElement("div");
+        this._scrollBorderDiv.id = "scrollBorderDiv";
+        this._scrollBorderDiv.style.width = `${this.width - 2}px`;
+        this._scrollBorderDiv.style.height = `${this.height - 2}px`;
+        this._scrollBorderDiv.style.position = "absolute";
+        this._scrollBorderDiv.style.left = `0px`;
+        this._scrollBorderDiv.style.top = `0px`;
+        this._scrollBorderDiv.style.border = "1px solid";
 
         this._innerDiv = document.createElement("div");
         this._innerDiv.style.height = `${this.height}px`;
@@ -55,6 +69,7 @@ export class ScrollInput extends Component {
         this._innerDiv.style.backgroundSize = "20px 20px";
 
         this._scrollDiv.appendChild(this._innerDiv);
+        document.body.appendChild(this._scrollBorderDiv);
         document.body.appendChild(this._scrollDiv);
         this._scrollBarSize = this._scrollDiv.offsetHeight - this._scrollDiv.clientHeight;
 
@@ -65,6 +80,13 @@ export class ScrollInput extends Component {
                 this.node.emit(ScrollInputEventType.UPDATE_Y, this._scrollDiv.scrollTop + this.min);
                 this._valueY = this._scrollDiv.scrollTop + this.min; 
             }
+
+            const now: Date = new Date();
+            if (this._scrollDiv.scrollLeft != 1 && now.getTime() - this._riseXTime.getTime() > this._XRollbackTime) {
+                this._riseXTime = now
+                this.node.emit(ScrollInputEventType.UPDATE_X, this._scrollDiv.scrollLeft - 1);
+            }
+            this._scrollDiv.scrollLeft = 1;
         })
 
         this._scrollDiv.addEventListener('mousemove', (event: MouseEvent) => {
@@ -79,9 +101,14 @@ export class ScrollInput extends Component {
         this._canvasRect = canvas.getBoundingClientRect();
         this._scrollDiv.style.width = `${this.width}px`;
         this._scrollDiv.style.height = `${this.height}px`;
-        this._innerDiv.style.width = `${this.width - 20}px`;
+        this._innerDiv.style.width = `${this.width - this._scrollBarSize + 3}px`;
         this._innerDiv.style.height = `${this._scrollDiv.offsetHeight - this._scrollBarSize + (this.max - this.min)}px`;
         this._scrollDiv.style.left = `${this._canvasRect.x + this.canvasPosition.x * (this._canvasRect.width - this._scrollDiv.offsetWidth)}px`;
         this._scrollDiv.style.top = `${this._canvasRect.y + (1 - this.canvasPosition.y) * (this._canvasRect.height - this._scrollDiv.offsetHeight)}px`;
+        this._scrollBorderDiv.style.width = `${this.width - 2}px`;
+        this._scrollBorderDiv.style.height = `${this.height - 2}px`;
+        this._scrollBorderDiv.style.left = this._scrollDiv.style.left;
+        this._scrollBorderDiv.style.top = this._scrollDiv.style.top
+        this._scrollDiv.scrollLeft = 1;
     }
 }

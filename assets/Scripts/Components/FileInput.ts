@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, input } from 'cc';
+import { _decorator, Component, Node, input, log } from 'cc';
 const { ccclass, property } = _decorator;
 
 export enum FileInputEventType {
@@ -9,6 +9,7 @@ export enum FileInputEventType {
 @ccclass('FileInput')
 export class FileInput extends Component {
     private _input: HTMLInputElement = null;
+    private _currentFileName: string = '';
 
     start () {
         //<input type="file" id="inputFile" style="display: none;">
@@ -27,6 +28,7 @@ export class FileInput extends Component {
     private getFileData(event: Event) {
         const input: HTMLInputElement = event.target as HTMLInputElement;
         if ('files' in input && input.files.length > 0) {
+            this._currentFileName = input.files[0].name;
             this.readFileContent(input.files[0]).then(content => {
                 this.node.emit(FileInputEventType.DATA_RECEIVED, content as string);
             }).catch(error => console.log(error))
@@ -40,6 +42,10 @@ export class FileInput extends Component {
         reader.onerror = error => reject(error)
         reader.readAsText(file)
       })
+    }
+
+    get currentFileName() {
+        return this._currentFileName;
     }
 }
 

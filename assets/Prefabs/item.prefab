@@ -38,7 +38,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": -540,
+      "x": -630,
       "y": 0,
       "z": 0
     },
@@ -385,9 +385,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
-      "g": 255,
-      "b": 255,
+      "r": 0,
+      "g": 0,
+      "b": 0,
       "a": 255
     },
     "_string": "https://emilierichards.com/wp-content/uploads/2020/08/Depositphotos_26705043_xl-2015-scaled.jpg",
@@ -456,7 +456,7 @@
     "node": {
       "__id__": 2
     },
-    "_enabled": true,
+    "_enabled": false,
     "__prefab": {
       "__id__": 20
     },

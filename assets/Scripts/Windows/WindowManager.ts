@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, director, assert, log, tween, UIOpacity } from 'cc';
+import { _decorator, Component, Node, director, assert, log, tween, UIOpacity, view, Size } from 'cc';
 import { WindowTransitionBase } from './WindowTransitionBase';
 const { ccclass, property } = _decorator;
 import Window, { WindowBehaviour } from './Window';
@@ -33,20 +33,20 @@ export class WindowManager extends Component {
         this.windows.forEach(w => w.window.active = false);
     }
 
-    openWindow(name: string) {
+    openWindow(name: string): Window {
         if (this._windows.length > 0 && this._windows[this._windows.length - 1].behaviour == WindowBehaviour.MODAL) {
             log("Modal window prevents from opening other windows");
-            return;
+            return null;
         }
         const wn = this.windows.find(n => n.name == name);
         if (!wn) {
             assert(false, `Can't find window ${name}`);
-            return;
+            return null;
         }
         const aw = this._activeWindows.get(name);
         if (aw) {
             log(`Window ${name} already in use`);
-            return;
+            return null;
         }
 
         let wnd = wn.window.getComponent(Window);
@@ -55,10 +55,21 @@ export class WindowManager extends Component {
         }
         wnd.name = name;
         if (!wnd.show(this._defaultTransition)) {
-            return;
+            return null;
         }
 
         wnd.node.parent.active = true;
+
+        //const viewSize = new Size(view.getVisibleSizeInPixel().x / devicePixelRatio, view.getVisibleSizeInPixel().y / devicePixelRatio);
+        const viewSize = view.getVisibleSize();
+         const windowSize = wnd.windowSize;
+         if (viewSize.width < windowSize.width) {
+             windowSize.width = viewSize.width;
+         }
+         if (viewSize.height < windowSize.height) {
+             windowSize.height = viewSize.height;
+         }
+         wnd.windowSize = windowSize;
 
         this._activeWindows.set(name, wnd);
         this._windows.push(wnd);
@@ -72,6 +83,8 @@ export class WindowManager extends Component {
             .to(0.15, { opacity: 255 })
             .start();
         }
+
+        return wnd;
     }
 
     closeWindow(name: string) {
