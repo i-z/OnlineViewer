@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2 } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2, find, assert } from 'cc';
 import { ListItem, ListItemEvent } from './ListItem';
 const { ccclass, property, requireComponent } = _decorator;
 
@@ -21,6 +21,10 @@ export class ListScrollView extends Component {
 
     onLoad () {
         this._scrollView = this.getComponent(ScrollView)
+        if (!this.contentNode) {
+            this.contentNode = find('view/content', this.node);
+        }
+        assert(this.contentNode, "Can't find content node");
     }
 
     setData(data: string[], offset?: number) {

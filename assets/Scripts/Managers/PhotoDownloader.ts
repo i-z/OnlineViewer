@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, assetManager, Sprite, log, Texture2D, ImageAsset, SpriteFrame, UITransform } from 'cc';
+import { _decorator, Component, Node, assetManager, Sprite, log, Texture2D, ImageAsset, SpriteFrame, UITransform, error } from 'cc';
 const { ccclass, property } = _decorator;
 
 export interface DownloadedSpriteFrame {
@@ -34,6 +34,7 @@ export class PhotoDownloader extends Component {
         return new Promise<DownloadedSpriteFrame>((res, rej) => {
             assetManager.loadRemote(url, (err, asset) => {
                 if (err) {
+                    error(err.message);
                     rej(err);
                     return;
                 }
@@ -42,6 +43,7 @@ export class PhotoDownloader extends Component {
                 const tex = new Texture2D();
                 tex.image = imageAsset;
                 spriteFrame.texture = tex;
+                log(`image width ${imageAsset.width} height ${imageAsset.height} texture width ${tex.width} height ${tex.height}`);
                 res({spriteFrame: spriteFrame, width: imageAsset.width, height: imageAsset.height});
             });
 

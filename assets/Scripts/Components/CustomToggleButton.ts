@@ -52,6 +52,9 @@ export class CustomToggleButton extends Component {
     get isChecked() {
         return this._buttonState == CustomToggleButtonState.SELECTED;
     }
+    set isChecked(val: boolean) {
+        this.setState(val ? CustomToggleButtonState.SELECTED : CustomToggleButtonState.NORMAL);
+    }
 
     setState(s: CustomToggleButtonState) {
         if (!this._initialized) {

@@ -17,10 +17,6 @@ export class MainScene extends Component {
         WindowDirector.instance.init();
     }
 
-    openInputWindow() {
-        WindowDirector.instance.openWindow('input');
-    }
-
     openFileInputWindow() {
         this.node.emit(MainSceneEventType.FILE_INPUT_REQUESTED);
     }

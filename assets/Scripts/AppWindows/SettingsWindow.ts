@@ -15,6 +15,7 @@ export class SettingsWindow extends Window {
     initalZoom:ToggleContainer = null;
 
     changeInitialZoom(t: Toggle) {
+        log(t);
         this._settings.initialZoom = InitialZoomType[t.node.name];
         log(this._settings);
     }

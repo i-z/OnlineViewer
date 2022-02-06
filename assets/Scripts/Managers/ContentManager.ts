@@ -10,8 +10,11 @@ import { FileInput, FileInputEventType } from '../Components/FileInput';
 import { PlayerCameraManager } from './PlayerCameraManager';
 import { Bounds } from '../Components/Bounds';
 import LocalSettings, { InitialZoomType, Settings } from '../Config/LocalSettings';
-import { SettingsWindow, SettingsWindowEventType } from '../AppWindows/SettingsWindow';
 import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
+import { FileMetaProvider } from '../Core/FileMetaProvider';
+import { FileMeta } from '../Core/FileMeta';
+import { downloadTextFromBrowser } from '../Utils/DOMHelper';
+import { CustomToggleButton } from '../Components/CustomToggleButton';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -44,13 +47,23 @@ export class ContentManager extends Component {
     @property(Label)
     fileName: Label = null;
 
+    @property(CustomToggleButton)
+    likeButon: CustomToggleButton = null;
+    @property(CustomToggleButton)
+    deleteButon: CustomToggleButton = null;
+
     private _data: string[] = []
     private _selectedIdx: number = 0;
     get selectedIndex(): number {
         return this._selectedIdx;
     }
 
+    private _metaProvider: FileMetaProvider = null;
+    private _meta: FileMeta = null;
+
     start() {
+        this._metaProvider = new FileMetaProvider();
+
         this.inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
             if (text.length > 0) {
                 WindowDirector.instance.closeWindow('input');
@@ -58,12 +71,19 @@ export class ContentManager extends Component {
             this.processData(text);
         });
 
+        this.inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (name: string) => {
+            const m = this._metaProvider.getFileMeta(name);
+            if (m) {
+                downloadTextFromBrowser(name + '.json', m.toJSON());
+            }
+        });
+
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
             this.loadPhotoWithIdx(idx);
         });
 
         this.textFileInput.node.on(FileInputEventType.DATA_RECEIVED, (str: string) => {
-            this.processData(str);
+            this.processData(str, this.textFileInput.currentFileName);
             this.fileName.string = this.textFileInput.currentFileName;
         });
 
@@ -111,14 +131,21 @@ export class ContentManager extends Component {
                     default:
                         break;
                 }
+
+                this.likeButon.isChecked = this._meta.isLiked(this._selectedIdx);
+                this.deleteButon.isChecked = this._meta.isDeleted(this._selectedIdx);
+
             });
         }
     }
 
-    processData(str: string) {
+    processData(str: string, fileName?: string) {
         this._data = str.split(/\r?\n/);
         this.trimEmptyEnd();
         this.listScroll.setData(this._data);
+        if (fileName) {
+            this._meta = this._metaProvider.getFileMeta(fileName);
+        }
     }
 
     private trimEmptyEnd() {
@@ -146,5 +173,30 @@ export class ContentManager extends Component {
     }
 
     makeFavorite() {
+        if (this._meta) {
+
+            if (this._meta.isLiked(this._selectedIdx)) {
+                this._meta.removeFromFavorites(this._selectedIdx);
+            } else {
+                this._meta.addFavorite({ index: this._selectedIdx, url: this._data[this._selectedIdx] });
+            }
+            
+            
+        }
+    }
+
+    deleteCurrent() {
+        if (this._meta) {
+            if (this._meta.isDeleted(this._selectedIdx)) {
+                this._meta.restore(this._selectedIdx);
+            } else {
+                this._meta.delete(this._selectedIdx);
+            }
+        }
+    }
+
+    openInputWindow() {
+        const iw = WindowDirector.instance.openWindow('input') as InputWindow;
+        iw.setFilesWithMetaDate(this._metaProvider.files);
     }
 }

@@ -43,9 +43,12 @@ export class ListItem extends Component {
     }
 
     select(sender:Toggle) {
-        log(this._idx);
         if (sender.isChecked) {
             this.node.emit(ListItemEvent.SELECT, this._idx);
         }
+    }
+
+    get index() {
+        return this._idx;
     }
 }
