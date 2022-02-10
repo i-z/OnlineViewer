@@ -30,7 +30,6 @@ export class CustomToggleButton extends Component {
 
     init() {
         assert(this.selected, "Can't find state of quiz button");
-        assert(this.normal, "Can't find state of quiz button");
         this._button = this.getComponent(Button);
         assert(this._button, "Button has to be");
         this.node.on(Button.EventType.CLICK, (event) => {
@@ -64,19 +63,22 @@ export class CustomToggleButton extends Component {
         switch (s) {
             case CustomToggleButtonState.NORMAL:
                 this.selected.active = false;
-                this.normal.active = true;
+                if (this.normal)
+                    this.normal.active = true;
                 //this._button.enabled = true;
                 this.node.emit(Toggle.EventType.TOGGLE, this);
                 break;
             case CustomToggleButtonState.SELECTED:
                 this.selected.active = true;
-                this.normal.active = false;
+                if (this.normal)
+                    this.normal.active = false;
                 this.node.emit(Toggle.EventType.TOGGLE, this);
                 //this._button.enabled = false;
                 break;
             case CustomToggleButtonState.INACTIVE:
                 this.selected.active = false;
-                this.normal.active = false;
+                if (this.normal)
+                    this.normal.active = false;
                 //this._button.enabled = false;
                 break;
             default:
