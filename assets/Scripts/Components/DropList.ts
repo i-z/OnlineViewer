@@ -12,7 +12,7 @@ export class DropList extends Component {
     @property(Prefab)
     itemPrefab: Prefab = null;
 
-    onLoad () {
+    onLoad() {
         assert(this.itemPrefab, "Prefab not found");
     }
 
@@ -32,16 +32,20 @@ export class DropList extends Component {
     }
 
     show() {
-        this._itemButtons.forEach(i => {
-            i?.reset();
-        });
-        this.node.active = true;
+        if (this._itemButtons) {
+            this._itemButtons.forEach(i => {
+                i?.reset();
+            });
+            this.node.active = true;
+        }
     }
 
     getSelected() {
-        for (const ib of this._itemButtons) {
-            if (ib.isSelected())
-                return ib.getItem();
+        if (this._itemButtons) {
+            for (const ib of this._itemButtons) {
+                if (ib.isSelected())
+                    return ib.getItem();
+            }
         }
         return null;
     }

@@ -12,7 +12,7 @@ import { Bounds } from '../Components/Bounds';
 import LocalSettings, { InitialZoomType, Settings } from '../Config/LocalSettings';
 import { ScrollInput, ScrollInputEventType } from '../Components/ScrollInput';
 import { FileMetaProvider } from '../Core/FileMetaProvider';
-import { FileMeta } from '../Core/FileMeta';
+import { MetaDataEntity } from '../Core/MetaDataEntity';
 import { downloadTextFromBrowser } from '../Utils/DOMHelper';
 import { CustomToggleButton } from '../Components/CustomToggleButton';
 const { ccclass, property } = _decorator;
@@ -59,7 +59,7 @@ export class ContentManager extends Component {
     }
 
     private _metaProvider: FileMetaProvider = null;
-    private _meta: FileMeta = null;
+    private _meta: MetaDataEntity = null;
 
     start() {
         this._metaProvider = new FileMetaProvider();
@@ -178,7 +178,7 @@ export class ContentManager extends Component {
             if (this._meta.isLiked(this._selectedIdx)) {
                 this._meta.removeFromFavorites(this._selectedIdx);
             } else {
-                this._meta.addFavorite({ index: this._selectedIdx, url: this._data[this._selectedIdx] });
+                this._meta.addFavoriteWithIdx(this._selectedIdx, this._data[this._selectedIdx]);
             }
             
             

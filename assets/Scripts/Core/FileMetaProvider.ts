@@ -1,12 +1,12 @@
 import { log, sys } from "cc";
-import { FileData } from "../Entities/FileData";
-import { FileMeta } from "./FileMeta";
+import { MetaData } from "../Entities/MetaData";
+import { MetaDataEntity } from "./MetaDataEntity";
 
 export class FileMetaProvider {
 
     private readonly _metaFileProviderStorageKey = 'metaFilesKeys';
     private _fileNameKey: Map<string, string> = new Map<string, string>();
-    private _filesMetas: Map<string, FileMeta> = new Map<string, FileMeta>();
+    private _filesMetas: Map<string, MetaDataEntity> = new Map<string, MetaDataEntity>();
 
     private _newIdx: number = 0;
 
@@ -27,21 +27,21 @@ export class FileMetaProvider {
         this._fileNameKey.forEach((key, filename) => {
             const fileMeta = sys.localStorage.getItem(key);
             if (fileMeta) {
-                this._filesMetas.set(key, new FileMeta(key, JSON.parse(fileMeta), this.metaChanged.bind(this)))
+                this._filesMetas.set(key, new MetaDataEntity(key, JSON.parse(fileMeta), this.metaChanged.bind(this)))
             }
         });
 
     }
 
-    private metaChanged(m: FileMeta) {
+    private metaChanged(m: MetaDataEntity) {
         //const m = this._filesMetas.get(key);
         if (m) {
             localStorage.setItem(m.key, m.toJSON());
         }
     }
 
-    getFileMeta(name: string): FileMeta {
-        let res: FileMeta = null;
+    getFileMeta(name: string): MetaDataEntity {
+        let res: MetaDataEntity = null;
         const key = this._fileNameKey.get(name);
         if (key) {
             res = this._filesMetas.get(key);
@@ -58,8 +58,8 @@ export class FileMetaProvider {
         return res;
     }
 
-    private createFileMeta(key: string): FileMeta {
-        const m = new FileMeta(key, {} as FileData, this.metaChanged.bind(this));
+    private createFileMeta(key: string): MetaDataEntity {
+        const m = new MetaDataEntity(key, {} as MetaData, this.metaChanged.bind(this));
         this._filesMetas.set(key, m);
         return m;
     }
