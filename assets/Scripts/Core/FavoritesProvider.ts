@@ -1,4 +1,5 @@
 import { sys } from "cc";
+import { Favorites } from "../Entities/Favorites";
 import { MetaData } from "../Entities/MetaData";
 import { MetaDataEntity } from "./MetaDataEntity";
 
@@ -35,11 +36,11 @@ export class FavoritesProvider {
         });
     }
 
-    private _onDataChanged : FavoritesChanged;
-    public get onDataChanged() : FavoritesChanged {
+    private _onDataChanged: FavoritesChanged;
+    public get onDataChanged(): FavoritesChanged {
         return this._onDataChanged;
     }
-    public set onDataChanged(v : FavoritesChanged) {
+    public set onDataChanged(v: FavoritesChanged) {
         this._onDataChanged = v;
     }
 
@@ -105,7 +106,7 @@ export class FavoritesProvider {
     }
 
     private createMetaDataEntity(key: string, name: string): MetaDataEntity {
-        const m = new MetaDataEntity(key, {name: name} as MetaData, this.metaChanged.bind(this));
+        const m = new MetaDataEntity(key, { name: name } as MetaData, this.metaChanged.bind(this));
         this._keyData.set(key, m);
         return m;
     }
@@ -129,5 +130,37 @@ export class FavoritesProvider {
 
     get entities(): MetaDataEntity[] {
         return Array.from(this._keyData.values());
+    }
+
+    toJSON(): string {
+        const favorites: Favorites = { lists: [] };
+        this._nameKey.forEach((k, n) => {
+            const data = this._keyData.get(k);
+            if (data) {
+                data.name = n;
+                favorites.lists.push(data.data);
+            }
+        });
+        return JSON.stringify(favorites);
+    }
+
+    addFromJSON(str: string) {
+        const favorites: Favorites = JSON.parse(str);
+        favorites.lists.forEach(l => {
+            if (l.name?.length > 0) {
+                const f = this.getMetaDataEntity(l.name);
+                if (f) {
+                    l.favorites.forEach(ff => f.addFavorite(ff));
+                    f.currentIndex = l.currentIndex;
+                } else {
+                    const key = `${this._keyPrefix}${this._newIdx}`;
+                    this._nameKey.set(l.name, key);
+                    this._newIdx++;
+                    const m = new MetaDataEntity(key, l, this.metaChanged.bind(this));
+                    this._keyData.set(key, m);
+                }
+            }
+        });
+        this.save();
     }
 }

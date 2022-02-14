@@ -11,7 +11,9 @@ export enum FavoritesWindowEventType {
     SAVE_SETTINGS = 'save_settings',
     ADD_NEW_LIST = 'add_new_list',
     REMOVE_LIST = 'remove_list',
-    RENAME_LIST = 'rename_list'
+    RENAME_LIST = 'rename_list',
+    DOWNLOAD_ALL_FAVORITES = 'download_all_favorites',
+    UPLOAD_SEVERAL_FAVORITES = 'upload_several_favorites'
 }
 
 @ccclass('FavoritesWindow')
@@ -56,6 +58,14 @@ export class FavoritesWindow extends Window {
         if (this.lists.selectedIndex >= 0 && this.newListName.string?.length > 0 && this._data[this.lists.selectedIndex] != this.newListName.string) {
             this.node.emit(FavoritesWindowEventType.RENAME_LIST, this._data[this.lists.selectedIndex], this.newListName.string);
         }
+    }
+
+    downloadAllFavorites() {
+        this.node.emit(FavoritesWindowEventType.DOWNLOAD_ALL_FAVORITES);
+    }
+
+    uploadServeralFavorites() {
+        this.node.emit(FavoritesWindowEventType.UPLOAD_SEVERAL_FAVORITES);
     }
 
     okTouch() {

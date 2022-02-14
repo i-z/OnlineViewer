@@ -27,8 +27,10 @@ export class MetaDataEntity {
     }
 
     addFavorite(fav: Favorite) {
-        this._data.favorites.push(fav);
-        this.raiseMetaChanged();
+        if (!this.has(fav.url)) {
+            this._data.favorites.push(fav);
+            this.raiseMetaChanged();
+        }
     }
 
     addFavoriteWithIdx(idx: number, url: string) {

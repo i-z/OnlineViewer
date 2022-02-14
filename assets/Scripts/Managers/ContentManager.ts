@@ -69,6 +69,7 @@ export class ContentManager extends Component {
     private _metaProvider: FileMetaProvider = null;
     private _meta: MetaDataEntity = null;
     private _favoritesProvider: FavoritesProvider = null;
+    private _favoritesUploadRequested: boolean = false;
 
     start() {
         this._metaProvider = new FileMetaProvider();
@@ -93,12 +94,18 @@ export class ContentManager extends Component {
         });
 
         this.textFileInput.node.on(FileInputEventType.DATA_RECEIVED, (str: string) => {
-            this.processData(str, this.textFileInput.currentFileName);
-            this.fileName.string = this.textFileInput.currentFileName;
+            if (this._favoritesUploadRequested) {
+                this._favoritesProvider.addFromJSON(str);
+                this._favoritesUploadRequested = false;
+            } else {
+                this.processData(str, this.textFileInput.currentFileName);
+                this.fileName.string = this.textFileInput.currentFileName;
+            }
         });
 
         const scene = this.getComponent(MainScene);
         scene.node.on(MainSceneEventType.FILE_INPUT_REQUESTED, () => {
+            this._favoritesUploadRequested = false;
             this.textFileInput.request();
         });
 
@@ -123,8 +130,17 @@ export class ContentManager extends Component {
                 this._favoritesProvider.removeMetaDataEntityWithName(name);
             });
 
-            fw.node.on(FavoritesWindowEventType.RENAME_LIST, (name: string, newName:string) => {
+            fw.node.on(FavoritesWindowEventType.RENAME_LIST, (name: string, newName: string) => {
                 this._favoritesProvider.renameMetaDataEntityWithName(name, newName);
+            });
+
+            fw.node.on(FavoritesWindowEventType.DOWNLOAD_ALL_FAVORITES, () => {
+                downloadTextFromBrowser('favorites.json', this._favoritesProvider.toJSON());
+            });
+
+            fw.node.on(FavoritesWindowEventType.UPLOAD_SEVERAL_FAVORITES, () => {
+                this._favoritesUploadRequested = true;
+                this.textFileInput.request();
             });
 
             fw.node.on(WindowEventType.OPENING, () => {
