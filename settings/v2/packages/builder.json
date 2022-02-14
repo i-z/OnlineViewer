@@ -1,6 +1,6 @@
 {
   "splash-setting": {
-    "url": "C:\\github\\OnlineViewer\\art\\logo.png",
+    "url": "project://art/logo.png",
     "displayRatio": 0.1,
     "totalTime": 1000,
     "clearColor": {
