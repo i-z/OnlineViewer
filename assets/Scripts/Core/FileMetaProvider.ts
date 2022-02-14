@@ -5,6 +5,7 @@ import { MetaDataEntity } from "./MetaDataEntity";
 export class FileMetaProvider {
 
     private readonly _metaFileProviderStorageKey = 'metaFilesKeys';
+    private readonly _keyPrefix = 'm';
     private _fileNameKey: Map<string, string> = new Map<string, string>();
     private _filesMetas: Map<string, MetaDataEntity> = new Map<string, MetaDataEntity>();
 
@@ -15,10 +16,11 @@ export class FileMetaProvider {
         const dict = JSON.parse(data);
 
         for (const fileName in dict) {
-            const key = dict[fileName];
+            const key = dict[fileName] as string;
             this._fileNameKey.set(fileName, key);
 
-            const idx = parseInt(key);
+            const num = key.substr(this._keyPrefix.length, key.length - this._keyPrefix.length);
+            const idx = parseInt(num);
             if (!isNaN(idx) && idx >= this._newIdx) {
                 this._newIdx = idx + 1;
             }
@@ -34,7 +36,6 @@ export class FileMetaProvider {
     }
 
     private metaChanged(m: MetaDataEntity) {
-        //const m = this._filesMetas.get(key);
         if (m) {
             localStorage.setItem(m.key, m.toJSON());
         }
@@ -46,20 +47,20 @@ export class FileMetaProvider {
         if (key) {
             res = this._filesMetas.get(key);
             if (!res) {
-                res = this.createFileMeta(key);
+                res = this.createFileMeta(key, name);
             }
         } else {
-            const key = String(this._newIdx);
+            const key = `${this._keyPrefix}${this._newIdx}`;
             this._fileNameKey.set(name, key)
             this._newIdx++;
-            res = this.createFileMeta(key)
+            res = this.createFileMeta(key, name)
         }
         this.save();
         return res;
     }
 
-    private createFileMeta(key: string): MetaDataEntity {
-        const m = new MetaDataEntity(key, {} as MetaData, this.metaChanged.bind(this));
+    private createFileMeta(key: string, name: string): MetaDataEntity {
+        const m = new MetaDataEntity(key, {name: name} as MetaData, this.metaChanged.bind(this));
         this._filesMetas.set(key, m);
         return m;
     }

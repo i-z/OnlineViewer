@@ -20,7 +20,7 @@ export class ListItem extends Component {
     @property
     startIdxFromZero: boolean = true;
 
-    start () {
+    start() {
     }
 
     init() {
@@ -28,7 +28,7 @@ export class ListItem extends Component {
         tr.anchorX = 0;
     }
 
-    setString(idx:number, str: string) {
+    setString(idx: number, str: string) {
         this._idx = idx;
         if (this.addIdxToString) {
             if (this.startIdxFromZero) {
@@ -42,10 +42,8 @@ export class ListItem extends Component {
         }
     }
 
-    select(sender:Toggle) {
-        if (sender.isChecked) {
-            this.node.emit(ListItemEvent.SELECT, this._idx);
-        }
+    select(sender: Toggle) {
+        this.node.emit(ListItemEvent.SELECT, this._idx, sender.isChecked);
     }
 
     get index() {

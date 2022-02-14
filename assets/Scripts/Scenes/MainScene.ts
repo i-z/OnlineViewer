@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, log } from 'cc';
+import { _decorator, Component, Node, log, game } from 'cc';
 import { SettingsWindow, SettingsWindowEventType } from '../AppWindows/SettingsWindow';
 import LocalSettings, { Settings } from '../Config/LocalSettings';
 import WindowDirector from '../Windows/WindowDirector';
@@ -15,6 +15,7 @@ export class MainScene extends Component {
     start () {
         LocalSettings.instance.init();
         WindowDirector.instance.init();
+        game.frameRate = 50;
     }
 
     openFileInputWindow() {

@@ -15,6 +15,11 @@ import { FileMetaProvider } from '../Core/FileMetaProvider';
 import { MetaDataEntity } from '../Core/MetaDataEntity';
 import { downloadTextFromBrowser } from '../Utils/DOMHelper';
 import { CustomToggleButton } from '../Components/CustomToggleButton';
+import { FavoritesWindow, FavoritesWindowEventType } from '../AppWindows/FavoritesWindow';
+import { FavoritesProvider } from '../Core/FavoritesProvider';
+import { WindowEventType } from '../Windows/Window';
+import { DropListButton, DropListButtonEventType } from '../Components/DropListButton';
+import { DropListItem, DropListItemButton } from '../Components/DropListItemButton';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -52,6 +57,9 @@ export class ContentManager extends Component {
     @property(CustomToggleButton)
     deleteButon: CustomToggleButton = null;
 
+    @property(DropListButton)
+    favoritesButton: DropListButton = null;
+
     private _data: string[] = []
     private _selectedIdx: number = 0;
     get selectedIndex(): number {
@@ -60,9 +68,11 @@ export class ContentManager extends Component {
 
     private _metaProvider: FileMetaProvider = null;
     private _meta: MetaDataEntity = null;
+    private _favoritesProvider: FavoritesProvider = null;
 
     start() {
         this._metaProvider = new FileMetaProvider();
+        this._favoritesProvider = new FavoritesProvider();
 
         this.inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
             if (text.length > 0) {
@@ -100,6 +110,45 @@ export class ContentManager extends Component {
                 this.previous();
             }
         });
+
+        this.favoritesButton.node.on(DropListButtonEventType.ITEM_SELECTED, this.toggleFavoritesList.bind(this));
+
+        const fw = WindowDirector.instance.getWindow('favorites') as FavoritesWindow;
+        if (fw) {
+            fw.node.on(FavoritesWindowEventType.ADD_NEW_LIST, (name: string) => {
+                const ent = this._favoritesProvider.getMetaDataEntity(name);
+            });
+
+            fw.node.on(FavoritesWindowEventType.REMOVE_LIST, (name: string) => {
+                this._favoritesProvider.removeMetaDataEntityWithName(name);
+            });
+
+            fw.node.on(FavoritesWindowEventType.RENAME_LIST, (name: string, newName:string) => {
+                this._favoritesProvider.renameMetaDataEntityWithName(name, newName);
+            });
+
+            fw.node.on(WindowEventType.OPENING, () => {
+                fw.setLists(this._favoritesProvider.names);
+            });
+
+            this._favoritesProvider.onDataChanged = () => {
+                fw.setLists(this._favoritesProvider.names);
+                this.updateFavorites();
+            };
+        }
+        this.updateFavorites();
+    }
+
+    private updateFavorites() {
+        if (this._data.length > 0) {
+            this.favoritesButton.setData(this._favoritesProvider.entities.map((e, i) => ({
+                name: e.name,
+                id: i,
+                markered: e.has(this._data[this._selectedIdx])
+            })));
+        } else {
+            this.favoritesButton.setData(this._favoritesProvider.names.map((x, i) => ({ id: i, name: x })));
+        }
     }
 
     loadPhotoWithIdx(idx: number) {
@@ -131,12 +180,16 @@ export class ContentManager extends Component {
                     default:
                         break;
                 }
-
-                this.likeButon.isChecked = this._meta.isLiked(this._selectedIdx);
-                this.deleteButon.isChecked = this._meta.isDeleted(this._selectedIdx);
-
+                this.imageLoaded();
             });
         }
+    }
+
+    imageLoaded() {
+        this.likeButon.isChecked = this._meta.isLiked(this._selectedIdx);
+        this.deleteButon.isChecked = this._meta.isDeleted(this._selectedIdx);
+        this.updateFavorites();
+        this._meta.currentIndex = this._selectedIdx;
     }
 
     processData(str: string, fileName?: string) {
@@ -180,8 +233,6 @@ export class ContentManager extends Component {
             } else {
                 this._meta.addFavoriteWithIdx(this._selectedIdx, this._data[this._selectedIdx]);
             }
-            
-            
         }
     }
 
@@ -199,4 +250,20 @@ export class ContentManager extends Component {
         const iw = WindowDirector.instance.openWindow('input') as InputWindow;
         iw.setFilesWithMetaDate(this._metaProvider.files);
     }
+
+    openFavoritesWindow() {
+        const fw = WindowDirector.instance.openWindow('favorites') as FavoritesWindow;
+    }
+
+    toggleFavoritesList(d: DropListItem) {
+        if (this._data.length > 0) {
+            const list = this._favoritesProvider.getMetaDataEntity(d.name);
+            if (!list.has(this._data[this._selectedIdx])) {
+                list.addFavoriteWithIdx(this._selectedIdx, this._data[this._selectedIdx]);
+            } else {
+                list.removeFromFavoritesUrl(this._data[this._selectedIdx])
+            }
+        }
+    }
+
 }

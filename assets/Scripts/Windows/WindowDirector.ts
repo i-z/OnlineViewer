@@ -41,5 +41,11 @@ export default class WindowDirector {
         this._windowManager.closeWindow(name);
     }
 
+    getWindow(name: string): Window {
+        assert(this._initialized, "WindowManager not initilized");
+        assert(this._windowManager, "WindowManager doesn't exist");
+        return this._windowManager.getWindow(name);
+    }
+
 }
 

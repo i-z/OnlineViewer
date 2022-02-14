@@ -12,7 +12,8 @@ export enum WindowState {
 
 export enum WindowBehaviour {
     NORMAL,
-    MODAL
+    MODAL,
+    MODAL_MESSAGE
 }
 
 export enum WindowEventType {
@@ -96,7 +97,6 @@ export default class Window extends Component {
         this.node.active = false;
     }
 
-    private _windowSize : Size;
     public get windowSize() : Size {
         return this._transform.contentSize;
     }

@@ -8,8 +8,8 @@ export class MetaDataEntity {
     private _data: MetaData;
     private _metaChanged: MetaChanged = null;
 
-    constructor(name: string, data: MetaData, callback: MetaChanged) {
-        this._key = name;
+    constructor(key: string, data: MetaData, callback: MetaChanged) {
+        this._key = key;
         this._data = data;
         this._metaChanged = callback;
 
@@ -46,6 +46,18 @@ export class MetaDataEntity {
         this.raiseMetaChanged();
     }
 
+    removeFromFavoritesUrl(url: string) {
+        const code = this.hashCode(url);
+        const f = this._data.favorites.find(f => f.hash == code);
+        if (f) {
+            const t = this._data.favorites.indexOf(f);
+            if (t >= 0) {
+                this._data.favorites.splice(t, 1);
+            }
+        }
+        this.raiseMetaChanged();
+    }
+
     delete(idx: number) {
         this._data.deleted.push(idx);
         this.raiseMetaChanged();
@@ -61,6 +73,11 @@ export class MetaDataEntity {
 
     isLiked(idx: number): boolean {
         return this._data.favorites.find(f => f.index == idx) != null;
+    }
+
+    has(url: string): boolean {
+        const code = this.hashCode(url);
+        return this._data.favorites.find(f => f.hash == code) != null;
     }
 
     isDeleted(idx: number): boolean {
@@ -83,5 +100,22 @@ export class MetaDataEntity {
     get data(): MetaData {
         return this._data;
     }
+
+    get name(): string {
+        return this._data?.name;
+    }
+
+    set name(val: string) {
+        this._data.name = val;
+    }
+
+    public get currentIndex() : number {
+        return this._data.currentIndex;
+    }
+    public set currentIndex(v : number) {
+        this._data.currentIndex = v;
+        this.raiseMetaChanged();
+    }
+    
 
 }

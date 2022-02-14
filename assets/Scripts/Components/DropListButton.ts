@@ -4,7 +4,10 @@ import { DropList } from './DropList';
 import { DropListItem } from './DropListItemButton';
 const { ccclass, property, requireComponent } = _decorator;
 
- 
+export enum DropListButtonEventType {
+    ITEM_SELECTED = 'item_selected'
+}
+
 @ccclass('DropListButton')
 @requireComponent(Button)
 export class DropListButton extends Component {
@@ -12,7 +15,7 @@ export class DropListButton extends Component {
     private _list: DropList = null;
     private _data: DropListItem[] = null;
 
-    onLoad () {
+    onLoad() {
         this._list = this.getComponentInChildren(DropList);
         this._list.onLoad();
 
@@ -35,7 +38,9 @@ export class DropListButton extends Component {
 
     hideListAndCheckSelection() {
         this._list.node.active = false;
-        log(this._list.getSelected());
+        if (this._list.getSelected()) {
+            this.node.emit(DropListButtonEventType.ITEM_SELECTED, this._list.getSelected());
+        }
     }
 
     setData(data: DropListItem[]) {

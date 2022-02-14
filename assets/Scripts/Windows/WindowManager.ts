@@ -34,10 +34,6 @@ export class WindowManager extends Component {
     }
 
     openWindow(name: string): Window {
-        if (this._windows.length > 0 && this._windows[this._windows.length - 1].behaviour == WindowBehaviour.MODAL) {
-            log("Modal window prevents from opening other windows");
-            return null;
-        }
         const wn = this.windows.find(n => n.name == name);
         if (!wn) {
             assert(false, `Can't find window ${name}`);
@@ -53,6 +49,12 @@ export class WindowManager extends Component {
         if (!wnd) {
             wnd = wn.window.addComponent(Window);
         }
+
+        if (this._windows.length > 0 && this._windows[this._windows.length - 1].behaviour == WindowBehaviour.MODAL && wnd.behaviour != WindowBehaviour.MODAL_MESSAGE) {
+            log("Modal window prevents from opening other windows");
+            return null;
+        }
+
         wnd.name = name;
         if (!wnd.show(this._defaultTransition)) {
             return null;
@@ -115,6 +117,15 @@ export class WindowManager extends Component {
 
         this._activeWindows.delete(name);
         this._windows = this._windows.filter(w => w.name != name);
+    }
+
+    getWindow(name: string): Window {
+        const wn = this.windows.find(n => n.name == name);
+        if (!wn) {
+            assert(false, `Can't find window ${name}`);
+            return null;
+        }
+        return wn.window.getComponent(Window);
     }
 
 }

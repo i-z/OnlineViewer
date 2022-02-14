@@ -1,10 +1,11 @@
 
-import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2, find, assert } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2, find, assert, Toggle } from 'cc';
 import { ListItem, ListItemEvent } from './ListItem';
 const { ccclass, property, requireComponent } = _decorator;
 
 export enum ListScrollViewEvent {
-    SELECT_ITEM = 'select item'
+    SELECT_ITEM = 'select_item',
+    SELECT_SINGLE_ITEM = 'select_single_item'
 }
  
 @ccclass('ListScrollView')
@@ -18,6 +19,7 @@ export class ListScrollView extends Component {
     itemPrefab: Prefab;
 
     private _scrollView: ScrollView = null;
+    private _idx: number = 0;
 
     onLoad () {
         this._scrollView = this.getComponent(ScrollView)
@@ -43,11 +45,23 @@ export class ListScrollView extends Component {
                     lit.setString(i, str);
                 }
                 
-                lit.node.on(ListItemEvent.SELECT, (idx:number) => {
+                lit.node.on(ListItemEvent.SELECT, (idx:number, isChecked: boolean) => {
                     this.node.emit(ListScrollViewEvent.SELECT_ITEM, idx);
                 });
             }
         }
-        this._scrollView.scrollTo(new Vec2(0, 1));
+        this._scrollView?.scrollTo(new Vec2(0, 1));
+    }
+
+    selectItem(t: Toggle) {
+        const item = t.getComponent(ListItem);
+        if (item) {
+            this._idx = item.index;
+            this.node.emit(ListScrollViewEvent.SELECT_SINGLE_ITEM, this._idx);
+        }
+    }
+
+    get selectedIndex() {
+        return this._idx;
     }
 }
