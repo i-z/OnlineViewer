@@ -1,4 +1,5 @@
 import { Favorite } from "../Entities/Favorite";
+import { FileIdentificationData } from "../Entities/FileIdentificationData";
 import { MetaData } from "../Entities/MetaData";
 
 type MetaChanged = (meta: MetaDataEntity) => void;
@@ -118,6 +119,19 @@ export class MetaDataEntity {
         this._data.currentIndex = v;
         this.raiseMetaChanged();
     }
-    
+
+    private static idEqual(a:FileIdentificationData, b: FileIdentificationData): boolean {
+        if (a.firstUrls.length != b.firstUrls.length)
+            return false;
+        for (let i = 0; i < a.firstUrls.length; i++) {
+            if (a.firstUrls[i] != b.firstUrls[i])
+                return false;
+        }
+        return true;
+    }
+
+    isEqualId(id: FileIdentificationData) {
+        return MetaDataEntity.idEqual(this._data.idData, id);
+    }
 
 }

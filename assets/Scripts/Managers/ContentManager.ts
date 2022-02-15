@@ -20,6 +20,7 @@ import { FavoritesProvider } from '../Core/FavoritesProvider';
 import { WindowEventType } from '../Windows/Window';
 import { DropListButton, DropListButtonEventType } from '../Components/DropListButton';
 import { DropListItem, DropListItemButton } from '../Components/DropListItemButton';
+import { FileIdentificationData } from '../Entities/FileIdentificationData';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -82,10 +83,13 @@ export class ContentManager extends Component {
             this.processData(text);
         });
 
-        this.inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (name: string) => {
-            const m = this._metaProvider.getFileMeta(name);
-            if (m) {
-                downloadTextFromBrowser(name + '.json', m.toJSON());
+        this.inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (idx: number) => {
+            const entities = this._metaProvider.entities;
+            if (idx < entities.length) {
+                const m = entities[idx];
+                if (m) {
+                    downloadTextFromBrowser(m.name + '.json', m.toJSON());
+                }
             }
         });
 
@@ -213,7 +217,7 @@ export class ContentManager extends Component {
         this.trimEmptyEnd();
         this.listScroll.setData(this._data);
         if (fileName) {
-            this._meta = this._metaProvider.getFileMeta(fileName);
+            this._meta = this._metaProvider.getFileMeta(fileName, this.getFileIdData());
         }
     }
 
@@ -264,7 +268,7 @@ export class ContentManager extends Component {
 
     openInputWindow() {
         const iw = WindowDirector.instance.openWindow('input') as InputWindow;
-        iw.setFilesWithMetaDate(this._metaProvider.files);
+        iw.setFilesWithMetaDate(this._metaProvider.entities);
     }
 
     openFavoritesWindow() {
@@ -280,6 +284,14 @@ export class ContentManager extends Component {
                 list.removeFromFavoritesUrl(this._data[this._selectedIdx])
             }
         }
+    }
+
+    private getFileIdData(): FileIdentificationData {
+        let i = 0;
+        const id: FileIdentificationData = { firstUrls: [] };
+        while (i < this._data.length && i < 3)
+            id.firstUrls.push(this._data[i++]);
+        return id;
     }
 
 }

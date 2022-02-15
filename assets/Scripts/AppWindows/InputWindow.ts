@@ -2,6 +2,7 @@
 import { _decorator, Component, Node, EditBox, log, Toggle, ToggleContainer } from 'cc';
 import { ListItem } from '../Components/ListItem';
 import { ListScrollView } from '../Components/ListScrollView';
+import { MetaDataEntity } from '../Core/MetaDataEntity';
 import Window from '../Windows/Window';
 const { ccclass, property } = _decorator;
 
@@ -19,7 +20,6 @@ export class InputWindow extends Window {
     @property(ListScrollView)
     metasList: ListScrollView = null;
 
-    private _data: string[] = [];
     private _idx:number = -1;
 
     start () {
@@ -32,12 +32,9 @@ export class InputWindow extends Window {
         this.node.emit(InputWindowEvents.INPUT, this.text.string);
     }
 
-    setFilesWithMetaDate(data: string[]) {
-        this._data = data;
-        this.metasList.setData(data);
-        if (this._data?.length > 0) {
-            this._idx = 0;
-        }
+    setFilesWithMetaDate(data: MetaDataEntity[]) {
+        this.metasList.setData(data.map(e => e.name));
+        this._idx = 0;
     }
 
     selectFileToDownload(t: Toggle) {
@@ -49,7 +46,7 @@ export class InputWindow extends Window {
 
     downloadTouch() {
         if (this._idx >= 0) {
-            this.node.emit(InputWindowEvents.DOWNLOAD_META, this._data[this._idx]);
+            this.node.emit(InputWindowEvents.DOWNLOAD_META, this._idx);
         }
     }
 }
