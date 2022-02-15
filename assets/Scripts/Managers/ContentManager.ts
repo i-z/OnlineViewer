@@ -26,9 +26,6 @@ const { ccclass, property } = _decorator;
 @ccclass('ContentManager')
 export class ContentManager extends Component {
 
-    @property(InputWindow)
-    inputWindow: InputWindow;
-
     @property(PaginatedListScrollView)
     listScroll: PaginatedListScrollView;
 
@@ -61,6 +58,8 @@ export class ContentManager extends Component {
     @property(DropListButton)
     favoritesButton: DropListButton = null;
 
+    _inputWindow: InputWindow;
+
     private _data: string[] = []
     private _selectedIdx: number = 0;
     get selectedIndex(): number {
@@ -76,20 +75,31 @@ export class ContentManager extends Component {
         this._metaProvider = new FileMetaProvider();
         this._favoritesProvider = new FavoritesProvider();
 
-        this.inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
+        this._inputWindow = WindowDirector.instance.getWindow('input') as InputWindow;
+
+        this._inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
             if (text.length > 0) {
                 WindowDirector.instance.closeWindow('input');
             }
             this.processData(text);
         });
 
-        this.inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (idx: number) => {
+        this._inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (idx: number) => {
             const entities = this._metaProvider.entities;
             if (idx < entities.length) {
                 const m = entities[idx];
                 if (m) {
                     downloadTextFromBrowser(m.name + '.json', m.toJSON());
                 }
+            }
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.REMOVE_META, (idx: number) => {
+            const entities = this._metaProvider.entities;
+            if (idx < entities.length) {
+                const m = entities[idx];
+                this._metaProvider.removeFileMeta(m);
+                this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
             }
         });
 
@@ -267,8 +277,8 @@ export class ContentManager extends Component {
     }
 
     openInputWindow() {
-        const iw = WindowDirector.instance.openWindow('input') as InputWindow;
-        iw.setFilesWithMetaDate(this._metaProvider.entities);
+        WindowDirector.instance.openWindow('input') as InputWindow;
+        this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
     }
 
     openFavoritesWindow() {

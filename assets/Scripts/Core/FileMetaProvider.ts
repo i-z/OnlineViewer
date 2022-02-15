@@ -109,4 +109,18 @@ export class FileMetaProvider {
         return Array.from(this._filesMetas.values());
     }
 
+    removeFileMeta(m: MetaDataEntity) {
+        this._filesMetas.delete(m.key);
+        localStorage.removeItem(m.key);
+        const fn = this._fileNameKey.get(m.name);
+        if (fn) {
+            if (fn.splice) {
+                fn.splice(fn.indexOf(m.key), 1);
+            } else {
+                this._fileNameKey.delete(m.name);
+            }
+        }
+        this.save();
+    }
+
 }

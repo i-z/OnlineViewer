@@ -8,7 +8,8 @@ const { ccclass, property } = _decorator;
 
 export enum InputWindowEvents {
     INPUT = 'input',
-    DOWNLOAD_META = 'download_meta'
+    DOWNLOAD_META = 'download_meta',
+    REMOVE_META = 'remove_meta'
 }
 
 @ccclass('InputWindow')
@@ -47,6 +48,12 @@ export class InputWindow extends Window {
     downloadTouch() {
         if (this._idx >= 0) {
             this.node.emit(InputWindowEvents.DOWNLOAD_META, this._idx);
+        }
+    }
+
+    removeTouch() {
+        if (this._idx >= 0) {
+            this.node.emit(InputWindowEvents.REMOVE_META, this._idx);
         }
     }
 }

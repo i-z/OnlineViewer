@@ -5582,7 +5582,7 @@
     },
     "component": "",
     "_componentId": "6455ch6ENhHp4z/idbk1LT/",
-    "handler": "downloadTouch",
+    "handler": "removeTouch",
     "customEventData": ""
   },
   {
@@ -14866,7 +14866,7 @@
     "_priority": 2,
     "_fov": 45,
     "_fovAxis": 0,
-    "_orthoHeight": 430.00000000000006,
+    "_orthoHeight": 430,
     "_near": 1,
     "_far": 2000,
     "_color": {
