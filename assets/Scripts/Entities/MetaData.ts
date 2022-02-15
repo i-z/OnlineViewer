@@ -7,4 +7,5 @@ export interface MetaData {
     favorites: Favorite[];
     currentIndex: number;
     idData?: FileIdentificationData;
+    description?: string;
 }

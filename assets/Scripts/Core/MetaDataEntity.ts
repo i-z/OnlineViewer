@@ -120,6 +120,15 @@ export class MetaDataEntity {
         this.raiseMetaChanged();
     }
 
+    public get description() : string {
+        return this.data.description;
+    }
+    public set description(v : string) {
+        this.data.description = v;
+        this.raiseMetaChanged();
+    }
+    
+
     private static idEqual(a:FileIdentificationData, b: FileIdentificationData): boolean {
         if (a.firstUrls.length != b.firstUrls.length)
             return false;

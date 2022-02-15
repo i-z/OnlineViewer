@@ -103,6 +103,15 @@ export class ContentManager extends Component {
             }
         });
 
+        this._inputWindow.node.on(InputWindowEvents.UPDATE_DESCRIPTION, (str: string, idx: number) => {
+            const entities = this._metaProvider.entities;
+            if (idx < entities.length) {
+                const m = entities[idx];
+                m.description = str;
+                this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
+            }
+        });
+
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
             this.loadPhotoWithIdx(idx);
         });

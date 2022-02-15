@@ -9,24 +9,26 @@ const { ccclass, property } = _decorator;
 export enum InputWindowEvents {
     INPUT = 'input',
     DOWNLOAD_META = 'download_meta',
-    REMOVE_META = 'remove_meta'
+    REMOVE_META = 'remove_meta',
+    UPDATE_DESCRIPTION = 'update_description'
 }
 
 @ccclass('InputWindow')
 export class InputWindow extends Window {
 
     @property(EditBox)
-    text:EditBox = null;
+    text: EditBox = null;
 
     @property(ListScrollView)
     metasList: ListScrollView = null;
+    @property(EditBox)
+    description: EditBox = null;
 
-    private _idx:number = -1;
+    private _idx: number = -1;
+    private _data: MetaDataEntity[] = [];
 
-    start () {
-    }
-
-    textChanged(arg:EditBox) {
+    start() {
+        this.description.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_DESCRIPTION, sender.string, this._idx));
     }
 
     okTouch() {
@@ -34,8 +36,13 @@ export class InputWindow extends Window {
     }
 
     setFilesWithMetaDate(data: MetaDataEntity[]) {
+        this._data = data;
         this.metasList.setData(data.map(e => e.name));
         this._idx = 0;
+        if (this._data.length > 0) {
+            const d = this._data[this._idx]?.description;
+            this.description.string = d ? d : '';
+        }
     }
 
     selectFileToDownload(t: Toggle) {
@@ -43,6 +50,8 @@ export class InputWindow extends Window {
         if (item) {
             this._idx = item.index;
         }
+        const d = this._data[this._idx]?.description;
+        this.description.string = d ? d : '';
     }
 
     downloadTouch() {
