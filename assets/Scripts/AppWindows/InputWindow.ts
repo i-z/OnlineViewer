@@ -10,7 +10,8 @@ export enum InputWindowEvents {
     INPUT = 'input',
     DOWNLOAD_META = 'download_meta',
     REMOVE_META = 'remove_meta',
-    UPDATE_DESCRIPTION = 'update_description'
+    UPDATE_DESCRIPTION = 'update_description',
+    REMOVE_ALL_META = 'remove_all_meta',
 }
 
 @ccclass('InputWindow')
@@ -64,6 +65,10 @@ export class InputWindow extends Window {
         if (this._idx >= 0) {
             this.node.emit(InputWindowEvents.REMOVE_META, this._idx);
         }
+    }
+
+    removeAllTouch() {
+        this.node.emit(InputWindowEvents.REMOVE_ALL_META, this._idx);
     }
 }
 

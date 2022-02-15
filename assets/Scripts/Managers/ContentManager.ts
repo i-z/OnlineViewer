@@ -112,6 +112,11 @@ export class ContentManager extends Component {
             }
         });
 
+        this._inputWindow.node.on(InputWindowEvents.REMOVE_ALL_META, (str: string, idx: number) => {
+            this._metaProvider.removeAllData();
+            this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
+        });
+
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
             this.loadPhotoWithIdx(idx);
         });

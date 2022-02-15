@@ -123,4 +123,12 @@ export class FileMetaProvider {
         this.save();
     }
 
+    removeAllData() {
+        this._filesMetas.forEach(m => localStorage.removeItem(m.key));
+        this._filesMetas = new Map<string, MetaDataEntity>();
+        localStorage.removeItem(this._metaFileProviderStorageKey);
+        this._fileNameKey = new Map<string, string[]>();
+        this._newIdx = 0;
+    }
+
 }
