@@ -8,4 +8,5 @@ export interface MetaData {
     currentIndex: number;
     idData?: FileIdentificationData;
     description?: string;
+    shelf?: string;
 }

@@ -12,6 +12,9 @@ export enum InputWindowEvents {
     REMOVE_META = 'remove_meta',
     UPDATE_DESCRIPTION = 'update_description',
     REMOVE_ALL_META = 'remove_all_meta',
+    UPDATE_SHELF = 'update_shelf',
+    REMOVE_DUPLICATES = 'remove_duplicates',
+    CLEANUP = 'cleanup'
 }
 
 @ccclass('InputWindow')
@@ -24,25 +27,39 @@ export class InputWindow extends Window {
     metasList: ListScrollView = null;
     @property(EditBox)
     description: EditBox = null;
+    @property(EditBox)
+    shelf: EditBox = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
 
     start() {
         this.description.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_DESCRIPTION, sender.string, this._idx));
+        this.shelf.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_SHELF, sender.string, this._idx));
     }
 
     okTouch() {
         this.node.emit(InputWindowEvents.INPUT, this.text.string);
     }
 
-    setFilesWithMetaDate(data: MetaDataEntity[]) {
+    setFilesWithMetaDate(data: MetaDataEntity[], current?: MetaDataEntity) {
         this._data = data;
-        this.metasList.setData(data.map(e => e.name));
+        if (current) {
+            this.metasList.setData(data.map(e => e === current ? '> ' + e.name : e.name));
+        } else {
+            this.metasList.setData(data.map(e => e.name));
+        }
+
         this._idx = 0;
+        this.bind();
+    }
+
+    private bind() {
         if (this._data.length > 0) {
             const d = this._data[this._idx]?.description;
             this.description.string = d ? d : '';
+            const s = this._data[this._idx]?.shelf;
+            this.shelf.string = s ? s : '';
         }
     }
 
@@ -51,8 +68,7 @@ export class InputWindow extends Window {
         if (item) {
             this._idx = item.index;
         }
-        const d = this._data[this._idx]?.description;
-        this.description.string = d ? d : '';
+        this.bind();
     }
 
     downloadTouch() {
@@ -69,6 +85,14 @@ export class InputWindow extends Window {
 
     removeAllTouch() {
         this.node.emit(InputWindowEvents.REMOVE_ALL_META, this._idx);
+    }
+
+    removeDuplicates() {
+        this.node.emit(InputWindowEvents.REMOVE_DUPLICATES);
+    }
+
+    cleanup() {
+        this.node.emit(InputWindowEvents.CLEANUP);
     }
 }
 

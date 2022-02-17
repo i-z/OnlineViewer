@@ -1,6 +1,7 @@
 import { Favorite } from "../Entities/Favorite";
 import { FileIdentificationData } from "../Entities/FileIdentificationData";
 import { MetaData } from "../Entities/MetaData";
+import { hashCode } from "../Utils/StringUtils";
 
 type MetaChanged = (meta: MetaDataEntity) => void;
 
@@ -20,13 +21,6 @@ export class MetaDataEntity {
             this._data.deleted = [];
     }
 
-    hashCode(s: string): number {
-        let h = 0;
-        for (let i = 0; i < s.length; i++)
-            h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-        return h;
-    }
-
     addFavorite(fav: Favorite) {
         if (!this.has(fav.url)) {
             this._data.favorites.push(fav);
@@ -35,7 +29,7 @@ export class MetaDataEntity {
     }
 
     addFavoriteWithIdx(idx: number, url: string) {
-        this.addFavorite({ index: idx, url: url, hash: this.hashCode(url) });
+        this.addFavorite({ index: idx, url: url, hash: hashCode(url) });
     }
 
     removeFromFavorites(idx: number) {
@@ -50,7 +44,7 @@ export class MetaDataEntity {
     }
 
     removeFromFavoritesUrl(url: string) {
-        const code = this.hashCode(url);
+        const code = hashCode(url);
         const f = this._data.favorites.find(f => f.hash == code);
         if (f) {
             const t = this._data.favorites.indexOf(f);
@@ -79,7 +73,7 @@ export class MetaDataEntity {
     }
 
     has(url: string): boolean {
-        const code = this.hashCode(url);
+        const code = hashCode(url);
         return this._data.favorites.find(f => f.hash == code) != null;
     }
 
@@ -127,7 +121,14 @@ export class MetaDataEntity {
         this.data.description = v;
         this.raiseMetaChanged();
     }
-    
+
+    public get shelf() : string {
+        return this.data.shelf;
+    }
+    public set shelf(v : string) {
+        this.data.shelf = v;
+        this.raiseMetaChanged();
+    }
 
     private static idEqual(a:FileIdentificationData, b: FileIdentificationData): boolean {
         if (a.firstUrls.length != b.firstUrls.length)

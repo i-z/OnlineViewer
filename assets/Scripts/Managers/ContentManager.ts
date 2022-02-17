@@ -21,6 +21,7 @@ import { WindowEventType } from '../Windows/Window';
 import { DropListButton, DropListButtonEventType } from '../Components/DropListButton';
 import { DropListItem, DropListItemButton } from '../Components/DropListItemButton';
 import { FileIdentificationData } from '../Entities/FileIdentificationData';
+import { hashCode } from '../Utils/StringUtils';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -76,6 +77,10 @@ export class ContentManager extends Component {
         this._favoritesProvider = new FavoritesProvider();
 
         this._inputWindow = WindowDirector.instance.getWindow('input') as InputWindow;
+        
+        this._metaProvider.onDataChanged = () => {
+            this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities, this._meta);
+        }
 
         this._inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
             if (text.length > 0) {
@@ -99,7 +104,6 @@ export class ContentManager extends Component {
             if (idx < entities.length) {
                 const m = entities[idx];
                 this._metaProvider.removeFileMeta(m);
-                this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
             }
         });
 
@@ -108,13 +112,26 @@ export class ContentManager extends Component {
             if (idx < entities.length) {
                 const m = entities[idx];
                 m.description = str;
-                this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
+            }
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.UPDATE_SHELF, (str: string, idx: number) => {
+            const entities = this._metaProvider.entities;
+            if (idx < entities.length) {
+                const m = entities[idx];
+                m.shelf = str;
             }
         });
 
         this._inputWindow.node.on(InputWindowEvents.REMOVE_ALL_META, (str: string, idx: number) => {
             this._metaProvider.removeAllData();
-            this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.REMOVE_DUPLICATES, () => {
+            this.removeDuplicates();
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.CLEANUP, () => {
         });
 
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
@@ -181,6 +198,44 @@ export class ContentManager extends Component {
             };
         }
         this.updateFavorites();
+    }
+
+    private removeDuplicates() {
+        const hashes: number[] = [];
+        const duplicates: Map<number, number[]> = new Map<number, number[]>();
+        const todelete: number[] = [];
+
+
+        for (let i = 0; i < this._data.length - 1; i++) {
+            for (let j = i + 1; j < this._data.length; j++) {
+                let a;
+                if (hashes[i]) {
+                    a = hashes[i];
+                } else {
+                    a = hashCode(this._data[i])
+                    hashes[i] = a;
+                }
+                let b;
+                if (hashes[j]) {
+                    b = hashes[j];
+                } else {
+                    b = hashCode(this._data[j])
+                    hashes[j] = b;
+                }
+                if (a == b) {
+                    if (duplicates.has(a)) {
+                        duplicates.get(a).push(j)
+                    } else {
+                        duplicates.set(a, [i, j]);
+                    }
+                    todelete.push(j);
+                }
+            }
+        }
+        todelete.sort((a, b) => b - a);
+        const newData = this._data.filter((v, i) => todelete.indexOf(i) < 0);
+        const newFile = newData.join("\r\n");
+        downloadTextFromBrowser(this._meta.shelf ? `${this._meta.shelf}_${this._meta.name}` : this._meta.name, newFile);
     }
 
     private updateFavorites() {
@@ -292,7 +347,7 @@ export class ContentManager extends Component {
 
     openInputWindow() {
         WindowDirector.instance.openWindow('input') as InputWindow;
-        this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities);
+        this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities, this._meta);
     }
 
     openFavoritesWindow() {

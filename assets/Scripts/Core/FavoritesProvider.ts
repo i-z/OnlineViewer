@@ -44,17 +44,17 @@ export class FavoritesProvider {
         this._onDataChanged = v;
     }
 
+    private raiseDataChanged() {
+        if (this._onDataChanged) {
+            this._onDataChanged();
+        }
+    }
+
     private metaChanged(m: MetaDataEntity) {
         if (m) {
             localStorage.setItem(m.key, m.toJSON());
         }
         this.raiseDataChanged();
-    }
-
-    private raiseDataChanged() {
-        if (this._onDataChanged) {
-            this._onDataChanged();
-        }
     }
 
     getMetaDataEntity(name: string): MetaDataEntity {

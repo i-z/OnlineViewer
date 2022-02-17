@@ -3,6 +3,8 @@ import { FileIdentificationData } from "../Entities/FileIdentificationData";
 import { MetaData } from "../Entities/MetaData";
 import { MetaDataEntity } from "./MetaDataEntity";
 
+type MetaChanged = () => void;
+
 export class FileMetaProvider {
 
     private readonly _metaFileProviderStorageKey = 'metaFilesKeys';
@@ -44,13 +46,27 @@ export class FileMetaProvider {
                 }
             });
         });
+    }
 
+    private _onDataChanged: MetaChanged;
+    public get onDataChanged(): MetaChanged {
+        return this._onDataChanged;
+    }
+    public set onDataChanged(v: MetaChanged) {
+        this._onDataChanged = v;
+    }
+
+    private raiseDataChanged() {
+        if (this._onDataChanged) {
+            this._onDataChanged();
+        }
     }
 
     private metaChanged(m: MetaDataEntity) {
         if (m) {
             localStorage.setItem(m.key, m.toJSON());
         }
+        this.raiseDataChanged();
     }
 
     getFileMeta(name: string, id: FileIdentificationData): MetaDataEntity {
@@ -121,6 +137,7 @@ export class FileMetaProvider {
             }
         }
         this.save();
+        this.raiseDataChanged();
     }
 
     removeAllData() {
@@ -129,6 +146,7 @@ export class FileMetaProvider {
         localStorage.removeItem(this._metaFileProviderStorageKey);
         this._fileNameKey = new Map<string, string[]>();
         this._newIdx = 0;
+        this.raiseDataChanged();
     }
 
 }
