@@ -130,6 +130,10 @@ export class MetaDataEntity {
         this.raiseMetaChanged();
     }
 
+    get idData(): FileIdentificationData {
+        return this._data.idData;
+    }
+
     private static idEqual(a:FileIdentificationData, b: FileIdentificationData): boolean {
         if (a.firstUrls.length != b.firstUrls.length)
             return false;
@@ -142,6 +146,55 @@ export class MetaDataEntity {
 
     isEqualId(id: FileIdentificationData) {
         return MetaDataEntity.idEqual(this._data.idData, id);
+    }
+
+    isNameFull(): boolean {
+        if (this._data.shelf?.length > 0) {
+            return this._data.name.startsWith(this._data.shelf) && this._data.name[this._data.shelf.length] == '_';
+        }
+        return true;
+    }
+    makeNameFull() {
+        if (!this.isNameFull()) {
+            this.name = `${this.shelf}_${this.name}`;
+            this.raiseMetaChanged();
+        }
+    }
+
+    deletePermanently(idx: number, raiseEvent: boolean) {
+        let m = false;
+        if (this._data.currentIndex == idx) {
+            this._data.currentIndex = 0;
+            m = true;
+        }
+        if (this._data.currentIndex > idx ) {
+            --this._data.currentIndex;
+            m = true;
+        }
+        this._data.deleted.forEach((d, k)=> {
+            if (d == idx) {
+                this._data.deleted.splice(idx, 1);
+                m = true;
+            }
+            if (d > idx) {
+                this._data.deleted[k] = --d;
+                m = true;
+            }
+        });
+
+        this._data.favorites.forEach((f, k)=> {
+            if (f.index == idx) {
+                f.index = -1;
+                m = true;
+            }
+            if (f.index > idx) {
+                --f.index;
+                m = true;
+            }
+        });
+        if (m && raiseEvent) {
+            this.raiseMetaChanged();
+        }
     }
 
 }

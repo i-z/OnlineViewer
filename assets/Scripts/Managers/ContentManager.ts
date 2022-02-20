@@ -19,7 +19,7 @@ import { FavoritesWindow, FavoritesWindowEventType } from '../AppWindows/Favorit
 import { FavoritesProvider } from '../Core/FavoritesProvider';
 import { WindowEventType } from '../Windows/Window';
 import { DropListButton, DropListButtonEventType } from '../Components/DropListButton';
-import { DropListItem, DropListItemButton } from '../Components/DropListItemButton';
+import { DropListItem } from '../Components/DropListItemButton';
 import { FileIdentificationData } from '../Entities/FileIdentificationData';
 import { hashCode } from '../Utils/StringUtils';
 const { ccclass, property } = _decorator;
@@ -71,13 +71,14 @@ export class ContentManager extends Component {
     private _meta: MetaDataEntity = null;
     private _favoritesProvider: FavoritesProvider = null;
     private _favoritesUploadRequested: boolean = false;
+    private readonly _useInPlaceDelete = true;
 
     start() {
         this._metaProvider = new FileMetaProvider();
         this._favoritesProvider = new FavoritesProvider();
 
         this._inputWindow = WindowDirector.instance.getWindow('input') as InputWindow;
-        
+
         this._metaProvider.onDataChanged = () => {
             this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities, this._meta);
         }
@@ -201,6 +202,9 @@ export class ContentManager extends Component {
     }
 
     private removeDuplicates() {
+        if (this._data?.length <= 0) {
+            return;
+        }
         const hashes: number[] = [];
         const duplicates: Map<number, number[]> = new Map<number, number[]>();
         const todelete: number[] = [];
@@ -232,10 +236,30 @@ export class ContentManager extends Component {
                 }
             }
         }
-        todelete.sort((a, b) => b - a);
-        const newData = this._data.filter((v, i) => todelete.indexOf(i) < 0);
-        const newFile = newData.join("\r\n");
-        downloadTextFromBrowser(this._meta.shelf ? `${this._meta.shelf}_${this._meta.name}` : this._meta.name, newFile);
+
+        if (this._useInPlaceDelete) {
+            todelete.sort((a, b) => b - a);
+            for (let i = 0; i < todelete.length; i++) {
+                const idx = todelete[i];
+                this._data.splice(idx, 1);
+                this._meta.deletePermanently(idx, false);
+            }
+        } else {
+            const newData = this._data.filter((v, i) => todelete.indexOf(i) < 0);
+            this._data = newData;
+            for (const idx of todelete) {
+                this._meta.deletePermanently(idx, false);
+            }
+        }
+
+        this._meta.makeNameFull();
+
+        this._metaProvider.save();
+        this.listScroll.setData(this._data);
+        log(todelete);
+        this._inputWindow.writeOutput(`Deleted ${todelete.length} urls`);
+        const newFile = this._data.join("\r\n");
+        downloadTextFromBrowser(this._meta.name, newFile);
     }
 
     private updateFavorites() {

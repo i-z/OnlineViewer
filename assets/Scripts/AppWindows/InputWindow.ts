@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Node, EditBox, log, Toggle, ToggleContainer } from 'cc';
+import { _decorator, Component, Node, EditBox, log, Toggle, ToggleContainer, Label } from 'cc';
 import { ListItem } from '../Components/ListItem';
 import { ListScrollView } from '../Components/ListScrollView';
 import { MetaDataEntity } from '../Core/MetaDataEntity';
@@ -29,6 +29,8 @@ export class InputWindow extends Window {
     description: EditBox = null;
     @property(EditBox)
     shelf: EditBox = null;
+    @property(Label)
+    output: Label = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
@@ -93,6 +95,10 @@ export class InputWindow extends Window {
 
     cleanup() {
         this.node.emit(InputWindowEvents.CLEANUP);
+    }
+
+    writeOutput(str: string) {
+        this.output.string = str;
     }
 }
 

@@ -20,13 +20,12 @@ export class FileMetaProvider {
 
         for (const fileName in dict) {
             let keys: string[];
-            if (typeof dict[fileName] === "string")
-            {
+            if (typeof dict[fileName] === "string") {
                 keys = [dict[fileName]];
             } else {
                 keys = dict[fileName] as string[];
             }
-            
+
             this._fileNameKey.set(fileName, keys);
 
             keys.forEach(key => {
@@ -64,7 +63,31 @@ export class FileMetaProvider {
 
     private metaChanged(m: MetaDataEntity) {
         if (m) {
-            localStorage.setItem(m.key, m.toJSON());
+            let fname = null;
+            for (const fn of this._fileNameKey.keys()) {
+                const keys = this._fileNameKey.get(fn)
+                if (keys.indexOf(m.key) >= 0) {
+                    fname = fn;
+                }
+            }
+            if (fname == null) {
+                error("ERROR > metaChanged");
+                debugger;
+            }
+            if (fname == m.name) {
+                localStorage.setItem(m.key, m.toJSON());
+            } else {
+                log(fname);
+                const keys = this._fileNameKey.get(fname);
+                keys.splice(keys.indexOf(m.key), 1);
+
+                const nkeys = this._fileNameKey.get(m.name);
+                if (nkeys) {
+                    nkeys.push(m.key);
+                } else {
+                    this._fileNameKey.set(m.name, [m.key]);
+                }
+            }
         }
         this.raiseDataChanged();
     }
@@ -77,14 +100,14 @@ export class FileMetaProvider {
                 if (key) {
                     const d = this._filesMetas.get(key);
                     if (d.isEqualId(id)) {
-                    res = d;
-                    break;
+                        res = d;
+                        break;
                     }
                 }
             }
         }
 
-        if (!res){
+        if (!res) {
             const key = `${this._keyPrefix}${this._newIdx}`;
             if (!keys) {
                 this._fileNameKey.set(name, [key]);
@@ -99,7 +122,7 @@ export class FileMetaProvider {
     }
 
     private createFileMeta(key: string, name: string, id: FileIdentificationData): MetaDataEntity {
-        const m = new MetaDataEntity(key, {name: name, idData: id} as MetaData, this.metaChanged.bind(this));
+        const m = new MetaDataEntity(key, { name: name, idData: id } as MetaData, this.metaChanged.bind(this));
         this._filesMetas.set(key, m);
         return m;
     }
@@ -110,7 +133,7 @@ export class FileMetaProvider {
         return JSON.stringify(res);
     }
 
-    private save() {
+    save() {
         localStorage.setItem(this._metaFileProviderStorageKey, this.mapToJson(this._fileNameKey));
         this._filesMetas.forEach((m, k) => {
             this.metaChanged(m);
