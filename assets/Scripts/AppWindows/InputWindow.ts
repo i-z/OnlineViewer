@@ -31,6 +31,8 @@ export class InputWindow extends Window {
     shelf: EditBox = null;
     @property(Label)
     output: Label = null;
+    @property(EditBox)
+    listName: EditBox = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
@@ -41,7 +43,7 @@ export class InputWindow extends Window {
     }
 
     okTouch() {
-        this.node.emit(InputWindowEvents.INPUT, this.text.string);
+        this.node.emit(InputWindowEvents.INPUT, this.text.string, this.listName.string);
     }
 
     setFilesWithMetaDate(data: MetaDataEntity[], current?: MetaDataEntity) {

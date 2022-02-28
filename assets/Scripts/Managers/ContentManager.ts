@@ -83,11 +83,11 @@ export class ContentManager extends Component {
             this._inputWindow.setFilesWithMetaDate(this._metaProvider.entities, this._meta);
         }
 
-        this._inputWindow.node.on(InputWindowEvents.INPUT, (text: string) => {
+        this._inputWindow.node.on(InputWindowEvents.INPUT, (text: string, name?: string) => {
             if (text.length > 0) {
                 WindowDirector.instance.closeWindow('input');
             }
-            this.processData(text);
+            this.processData(text, name);
         });
 
         this._inputWindow.node.on(InputWindowEvents.DOWNLOAD_META, (idx: number) => {
