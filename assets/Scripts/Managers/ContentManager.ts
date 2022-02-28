@@ -322,6 +322,9 @@ export class ContentManager extends Component {
         if (fileName) {
             this._meta = this._metaProvider.getFileMeta(fileName, this.getFileIdData());
         }
+        if (this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
+            this.loadPhotoWithIdx(this._meta.currentIndex);
+        }
     }
 
     private trimEmptyEnd() {

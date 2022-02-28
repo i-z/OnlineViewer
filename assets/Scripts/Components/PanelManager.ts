@@ -1,6 +1,6 @@
 
 import { _decorator, Component, Node, Toggle, log } from 'cc';
-import { CustomToggleButton } from './CustomToggleButton';
+import { CustomToggleButton, CustomToggleButtonState } from './CustomToggleButton';
 import { DockPanel } from './DockPanel';
 const { ccclass, property } = _decorator;
 
@@ -17,8 +17,10 @@ export class PanelManager extends Component {
 
     @property([ToggleDockPanel])
     toggleDockPanels: ToggleDockPanel[] = [];
+    @property
+    hidePanelsOnStart: boolean = true;
 
-    start () {
+    onLoad () {
         for (const tp of this.toggleDockPanels) {
             const panel = tp.panel;
             tp.toggle.node.on(Toggle.EventType.TOGGLE, (t) => {
@@ -29,6 +31,10 @@ export class PanelManager extends Component {
                     panel.hide();
                 }
             });
+            if (this.hidePanelsOnStart) {
+                panel.setOpened(false);
+                tp.toggle.setState(CustomToggleButtonState.NORMAL, false);
+            }
         }
     }
 }

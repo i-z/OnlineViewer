@@ -1,4 +1,4 @@
-import { log, sys } from "cc";
+import { error, log, sys } from "cc";
 import { FileIdentificationData } from "../Entities/FileIdentificationData";
 import { MetaData } from "../Entities/MetaData";
 import { MetaDataEntity } from "./MetaDataEntity";

@@ -55,7 +55,7 @@ export class CustomToggleButton extends Component {
         this.setState(val ? CustomToggleButtonState.SELECTED : CustomToggleButtonState.NORMAL);
     }
 
-    setState(s: CustomToggleButtonState) {
+    setState(s: CustomToggleButtonState, raiseEvent: boolean = true) {
         if (!this._initialized) {
             this.init();
         }
@@ -65,21 +65,22 @@ export class CustomToggleButton extends Component {
                 this.selected.active = false;
                 if (this.normal)
                     this.normal.active = true;
-                //this._button.enabled = true;
-                this.node.emit(Toggle.EventType.TOGGLE, this);
+                if (raiseEvent) {
+                    this.node.emit(Toggle.EventType.TOGGLE, this);
+                }
                 break;
             case CustomToggleButtonState.SELECTED:
                 this.selected.active = true;
                 if (this.normal)
                     this.normal.active = false;
-                this.node.emit(Toggle.EventType.TOGGLE, this);
-                //this._button.enabled = false;
+                if (raiseEvent) {
+                    this.node.emit(Toggle.EventType.TOGGLE, this);
+                }
                 break;
             case CustomToggleButtonState.INACTIVE:
                 this.selected.active = false;
                 if (this.normal)
                     this.normal.active = false;
-                //this._button.enabled = false;
                 break;
             default:
                 break;
