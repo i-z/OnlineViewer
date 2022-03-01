@@ -1,5 +1,6 @@
 
-import { _decorator, Component, Node, EditBox, log, Toggle, ToggleContainer, Label } from 'cc';
+import { _decorator, Component, Node, EditBox, log, Toggle, ToggleContainer, Label, Button } from 'cc';
+import { ConfirmationHelper } from '../Components/ConfirmationHelper';
 import { ListItem } from '../Components/ListItem';
 import { ListScrollView } from '../Components/ListScrollView';
 import { MetaDataEntity } from '../Core/MetaDataEntity';
@@ -14,7 +15,10 @@ export enum InputWindowEvents {
     REMOVE_ALL_META = 'remove_all_meta',
     UPDATE_SHELF = 'update_shelf',
     REMOVE_DUPLICATES = 'remove_duplicates',
-    CLEANUP = 'cleanup'
+    CLEANUP = 'cleanup',
+    ONLY_FAVORITES = 'only_favorites',
+    ONLY_DELETED = 'only_deleted',
+    CLEAR_FILTER = 'clear_filter'
 }
 
 @ccclass('InputWindow')
@@ -33,13 +37,24 @@ export class InputWindow extends Window {
     output: Label = null;
     @property(EditBox)
     listName: EditBox = null;
+    @property(Button)
+    filterFavorites: Button = null;
+    @property(Button)
+    filterDeleted: Button = null;
+    @property(Button)
+    clearFilter: Button = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
+    private _confirm: ConfirmationHelper = null;
 
     start() {
         this.description.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_DESCRIPTION, sender.string, this._idx));
         this.shelf.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_SHELF, sender.string, this._idx));
+        this._confirm = this.getComponent(ConfirmationHelper);
+        this.filterFavorites.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_FAVORITES);});
+        this.filterDeleted.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_DELETED);});
+        this.clearFilter.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.CLEAR_FILTER);});
     }
 
     okTouch() {
@@ -83,12 +98,16 @@ export class InputWindow extends Window {
 
     removeTouch() {
         if (this._idx >= 0) {
-            this.node.emit(InputWindowEvents.REMOVE_META, this._idx);
+            this._confirm.confirm(() => {
+                this.node.emit(InputWindowEvents.REMOVE_META, this._idx);
+            });
         }
     }
 
     removeAllTouch() {
-        this.node.emit(InputWindowEvents.REMOVE_ALL_META, this._idx);
+        this._confirm.confirm(() => {
+            this.node.emit(InputWindowEvents.REMOVE_ALL_META, this._idx);
+        });
     }
 
     removeDuplicates() {

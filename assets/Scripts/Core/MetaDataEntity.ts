@@ -197,4 +197,11 @@ export class MetaDataEntity {
         }
     }
 
+    get favorites():  number[] {
+        return this._data.favorites.map(f => f.index);
+    }
+
+    get deleted(): number[] {
+        return this._data.deleted;
+    }
 }

@@ -62,10 +62,9 @@ export class ContentManager extends Component {
     _inputWindow: InputWindow;
 
     private _data: string[] = []
+    private _fileData: string[] = []
     private _selectedIdx: number = 0;
-    get selectedIndex(): number {
-        return this._selectedIdx;
-    }
+    private _mapIndex: number[] = null;
 
     private _metaProvider: FileMetaProvider = null;
     private _meta: MetaDataEntity = null;
@@ -135,6 +134,18 @@ export class ContentManager extends Component {
         this._inputWindow.node.on(InputWindowEvents.CLEANUP, () => {
         });
 
+        this._inputWindow.node.on(InputWindowEvents.ONLY_FAVORITES, () => {
+            this.filter(true);
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.ONLY_DELETED, () => {
+            this.filter(false);
+        });
+
+        this._inputWindow.node.on(InputWindowEvents.CLEAR_FILTER, () => {
+            this.clearFilter();
+        });
+
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
             this.loadPhotoWithIdx(idx);
         });
@@ -199,6 +210,34 @@ export class ContentManager extends Component {
             };
         }
         this.updateFavorites();
+    }
+
+    private clearFilter() {
+        this._data = this._fileData;
+        this._mapIndex = null;
+        this.listScroll.setData(this._data);
+        if (this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
+            this.loadPhotoWithIdx(this._meta.currentIndex);
+        }
+    }
+
+    private filter(favorites: boolean) {
+        if (this._mapIndex) {
+            this._data = this._fileData;
+        } else {
+            this._fileData = this._data;
+        }
+        this._mapIndex = [];
+        const filter = favorites ? this._meta.favorites : this._meta.deleted;
+        this._data = this._data.filter((v, k) => {
+            if (filter.indexOf(k) < 0)
+                return false;
+            this._mapIndex.push(k);
+            return true;
+        });
+        this.listScroll.setData(this._data);
+        if (this._data.length > 0)
+            this.loadPhotoWithIdx(0);
     }
 
     private removeDuplicates() {
@@ -309,10 +348,12 @@ export class ContentManager extends Component {
     }
 
     imageLoaded() {
-        this.likeButon.isChecked = this._meta.isLiked(this._selectedIdx);
-        this.deleteButon.isChecked = this._meta.isDeleted(this._selectedIdx);
+        const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+        this.likeButon.isChecked = this._meta.isLiked(idx);
+        this.deleteButon.isChecked = this._meta.isDeleted(idx);
         this.updateFavorites();
-        this._meta.currentIndex = this._selectedIdx;
+        if (this._mapIndex == null)
+            this._meta.currentIndex = this._selectedIdx;
     }
 
     processData(str: string, fileName?: string) {
@@ -353,21 +394,22 @@ export class ContentManager extends Component {
 
     makeFavorite() {
         if (this._meta) {
-
-            if (this._meta.isLiked(this._selectedIdx)) {
-                this._meta.removeFromFavorites(this._selectedIdx);
+            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+            if (this._meta.isLiked(idx)) {
+                this._meta.removeFromFavorites(idx);
             } else {
-                this._meta.addFavoriteWithIdx(this._selectedIdx, this._data[this._selectedIdx]);
+                this._meta.addFavoriteWithIdx(idx, this._data[this._selectedIdx]);
             }
         }
     }
 
     deleteCurrent() {
         if (this._meta) {
-            if (this._meta.isDeleted(this._selectedIdx)) {
-                this._meta.restore(this._selectedIdx);
+            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+            if (this._meta.isDeleted(idx)) {
+                this._meta.restore(idx);
             } else {
-                this._meta.delete(this._selectedIdx);
+                this._meta.delete(idx);
             }
         }
     }
