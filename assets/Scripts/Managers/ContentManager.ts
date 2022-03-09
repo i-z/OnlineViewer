@@ -212,10 +212,18 @@ export class ContentManager extends Component {
         this.updateFavorites();
     }
 
+    private populateScrollView() {
+        if (this._meta) {
+            this.listScroll.setData(this._data, this._meta.deleted);
+        } else {
+            this.listScroll.setData(this._data);
+        }
+    }
+
     private clearFilter() {
         this._data = this._fileData;
         this._mapIndex = null;
-        this.listScroll.setData(this._data);
+        this.populateScrollView();
         if (this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
             this.loadPhotoWithIdx(this._meta.currentIndex);
         }
@@ -294,7 +302,7 @@ export class ContentManager extends Component {
         this._meta.makeNameFull();
 
         this._metaProvider.save();
-        this.listScroll.setData(this._data);
+        this.populateScrollView();
         log(todelete);
         this._inputWindow.writeOutput(`Deleted ${todelete.length} urls`);
         const newFile = this._data.join("\r\n");
@@ -359,10 +367,10 @@ export class ContentManager extends Component {
     processData(str: string, fileName?: string) {
         this._data = str.split(/\r?\n/);
         this.trimEmptyEnd();
-        this.listScroll.setData(this._data);
         if (fileName) {
-            this._meta = this._metaProvider.getFileMeta(fileName, this.getFileIdData());
+            this._meta = this._metaProvider.getFileMeta(fileName, ContentManager.getFileIdData(this._data));
         }
+        this.populateScrollView();
         if (this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
             this.loadPhotoWithIdx(this._meta.currentIndex);
         }
@@ -434,11 +442,11 @@ export class ContentManager extends Component {
         }
     }
 
-    private getFileIdData(): FileIdentificationData {
+    private static getFileIdData(data: string[]): FileIdentificationData {
         let i = 0;
         const id: FileIdentificationData = { firstUrls: [] };
-        while (i < this._data.length && i < 3)
-            id.firstUrls.push(this._data[i++]);
+        while (i < data.length && i < 3)
+            id.firstUrls.push(data[i++]);
         return id;
     }
 

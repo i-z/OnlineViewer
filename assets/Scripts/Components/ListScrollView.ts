@@ -7,7 +7,7 @@ export enum ListScrollViewEvent {
     SELECT_ITEM = 'select_item',
     SELECT_SINGLE_ITEM = 'select_single_item'
 }
- 
+
 @ccclass('ListScrollView')
 @requireComponent(ScrollView)
 export class ListScrollView extends Component {
@@ -21,7 +21,7 @@ export class ListScrollView extends Component {
     private _scrollView: ScrollView = null;
     private _idx: number = 0;
 
-    onLoad () {
+    onLoad() {
         this._scrollView = this.getComponent(ScrollView)
         if (!this.contentNode) {
             this.contentNode = find('view/content', this.node);
@@ -29,25 +29,31 @@ export class ListScrollView extends Component {
         assert(this.contentNode, "Can't find content node");
     }
 
-    setData(data: string[], offset?: number) {
+    setData(data: string[], offset?: number, deleted?: number[], type1?: number[]) {
         this.contentNode.removeAllChildren();
+        let off = 0;
+        if (offset) {
+            off = offset;
+        }
         for (var i = 0; i < data.length; i++) {
-            const str = data[i];
-            const item = instantiate(this.itemPrefab);
-            item.parent = this.contentNode;
-            const lit = item.getComponent(ListItem);
-            if (lit) {
-                lit.init();
-                if (offset) {
-                    lit.setString(i + offset, str);
+            if (deleted === undefined || deleted.indexOf(off + i) < 0) {
+                const str = data[i];
+                const item = instantiate(this.itemPrefab);
+                item.parent = this.contentNode;
+                const lit = item.getComponent(ListItem);
+                if (lit) {
+                    lit.init();
+                    if (offset) {
+                        lit.setString(i + offset, str);
+                    }
+                    else {
+                        lit.setString(i, str);
+                    }
+
+                    lit.node.on(ListItemEvent.SELECT, (idx: number, isChecked: boolean) => {
+                        this.node.emit(ListScrollViewEvent.SELECT_ITEM, idx);
+                    });
                 }
-                else {
-                    lit.setString(i, str);
-                }
-                
-                lit.node.on(ListItemEvent.SELECT, (idx:number, isChecked: boolean) => {
-                    this.node.emit(ListScrollViewEvent.SELECT_ITEM, idx);
-                });
             }
         }
         this._scrollView?.scrollTo(new Vec2(0, 1));

@@ -18,26 +18,24 @@ export class PaginatedListScrollView extends Component {
 
     private _data: string[] = []
 
-    start () {
+    start() {
         this.paginator.node.on(ListScrollViewEvent.SELECT_ITEM, (idx) => {
-            log('+');
-            log(idx);
             this.setPage(idx);
         });
     }
 
-    setData(data: string[]) {
+    setData(data: string[], deleted?: number[], type1?: number[]) {
         this._data = data;
         const pages = Math.ceil(data.length / this.itemsOnPage);
         const pn = new Array(pages).fill(1).map((e, i) => String(i + 1));
         this.paginator.setData(pn);
-        this.setPage(0);
+        this.setPage(0, deleted, type1);
     }
 
-    setPage(num: number) {
+    setPage(num: number, deleted?: number[], type1?: number[]) {
         const start = this.itemsOnPage * num;
         const end = start + this.itemsOnPage > this._data.length ? this._data.length : start + this.itemsOnPage;
-        this.listScroll.setData(this._data.slice(this.itemsOnPage * num, end), start);
+        this.listScroll.setData(this._data.slice(this.itemsOnPage * num, end), start, deleted, type1);
     }
 
 }
