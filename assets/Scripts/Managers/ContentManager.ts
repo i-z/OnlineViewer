@@ -385,16 +385,20 @@ export class ContentManager extends Component {
     }
 
     next() {
-        //log(this._selectedIdx + 1);
-        if (this._selectedIdx + 1 < this._data.length) {
-            this.loadPhotoWithIdx(this._selectedIdx + 1);
+        let idx = this._selectedIdx + 1;
+        while (this._meta.deleted.indexOf(idx) >= 0)
+            ++idx;
+        if (idx < this._data.length) {
+            this.loadPhotoWithIdx(idx);
         }
     }
 
     previous() {
-        //log(this._selectedIdx - 1);
-        if (this._selectedIdx - 1 >= 0) {
-            this.loadPhotoWithIdx(this._selectedIdx - 1);
+        let idx = this._selectedIdx - 1;
+        while (this._meta.deleted.indexOf(idx) >= 0)
+            --idx;
+        if (idx >= 0) {
+            this.loadPhotoWithIdx(idx);
         }
     }
 
