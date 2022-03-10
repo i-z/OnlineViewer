@@ -6,6 +6,14 @@ export enum ListItemEvent {
     SELECT = 'select'
 }
 
+export interface ListItemData {
+    index: number;
+    flags?: number[];
+    text: string;
+    number: number;
+    deleted: boolean;
+}
+
 @ccclass('ListItem')
 export class ListItem extends Component {
 
@@ -28,7 +36,7 @@ export class ListItem extends Component {
         tr.anchorX = 0;
     }
 
-    setString(idx: number, str: string) {
+    setString(idx: number, str: string, data?: ListItemData) {
         this._idx = idx;
         if (this.addIdxToString) {
             if (this.startIdxFromZero) {

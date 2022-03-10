@@ -18,7 +18,8 @@ export enum InputWindowEvents {
     CLEANUP = 'cleanup',
     ONLY_FAVORITES = 'only_favorites',
     ONLY_DELETED = 'only_deleted',
-    CLEAR_FILTER = 'clear_filter'
+    CLEAR_FILTER = 'clear_filter',
+    UPLOAD_META_FILE = 'upload_meta_file'
 }
 
 @ccclass('InputWindow')
@@ -43,6 +44,8 @@ export class InputWindow extends Window {
     filterDeleted: Button = null;
     @property(Button)
     clearFilter: Button = null;
+    @property(Button)
+    uploadMeta: Button = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
@@ -55,6 +58,7 @@ export class InputWindow extends Window {
         this.filterFavorites.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_FAVORITES);});
         this.filterDeleted.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_DELETED);});
         this.clearFilter.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.CLEAR_FILTER);});
+        this.uploadMeta.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.UPLOAD_META_FILE);});
     }
 
     okTouch() {

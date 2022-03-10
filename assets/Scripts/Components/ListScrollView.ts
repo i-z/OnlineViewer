@@ -1,6 +1,6 @@
 
 import { _decorator, Component, Node, Prefab, instantiate, ScrollView, Vec2, find, assert, Toggle } from 'cc';
-import { ListItem, ListItemEvent } from './ListItem';
+import { ListItem, ListItemData, ListItemEvent } from './ListItem';
 const { ccclass, property, requireComponent } = _decorator;
 
 export enum ListScrollViewEvent {
@@ -29,14 +29,15 @@ export class ListScrollView extends Component {
         assert(this.contentNode, "Can't find content node");
     }
 
-    setData(data: string[], offset?: number, deleted?: number[], type1?: number[]) {
+    setData(data: string[], offset?: number, data1?: ListItemData[]) {
         this.contentNode.removeAllChildren();
         let off = 0;
         if (offset) {
             off = offset;
         }
         for (var i = 0; i < data.length; i++) {
-            if (deleted === undefined || deleted.indexOf(off + i) < 0) {
+            const d = data1?.find(d => d.index === i);
+            if (!d || !d.deleted) {
                 const str = data[i];
                 const item = instantiate(this.itemPrefab);
                 item.parent = this.contentNode;
@@ -44,10 +45,10 @@ export class ListScrollView extends Component {
                 if (lit) {
                     lit.init();
                     if (offset) {
-                        lit.setString(i + offset, str);
+                        lit.setString(i + offset, str, d);
                     }
                     else {
-                        lit.setString(i, str);
+                        lit.setString(i, str, d);
                     }
 
                     lit.node.on(ListItemEvent.SELECT, (idx: number, isChecked: boolean) => {

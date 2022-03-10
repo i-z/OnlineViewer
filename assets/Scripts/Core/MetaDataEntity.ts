@@ -98,6 +98,11 @@ export class MetaDataEntity {
         return this._data;
     }
 
+    set data(value: MetaData) {
+        this._data = value;
+        this.raiseMetaChanged();
+    }
+
     get name(): string {
         return this._data?.name;
     }

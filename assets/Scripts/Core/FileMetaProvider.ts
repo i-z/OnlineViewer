@@ -172,4 +172,19 @@ export class FileMetaProvider {
         this.raiseDataChanged();
     }
 
+    addOrUpdate(filename: string, data: string) {
+        let name = filename;
+        if (filename.slice(filename.length - 5) == '.json') {
+            name = filename.slice(0, filename.length - 5);
+        }
+        log(`addOrUpdate >> ${name}`);
+
+        const md = JSON.parse(data) as MetaData;
+        if (md) {
+            const m = this.getFileMeta(md.name, md.idData);
+            if (m) {
+                m.data = md;
+            }
+        }
+    }
 }

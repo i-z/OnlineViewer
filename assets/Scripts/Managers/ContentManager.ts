@@ -22,6 +22,7 @@ import { DropListButton, DropListButtonEventType } from '../Components/DropListB
 import { DropListItem } from '../Components/DropListItemButton';
 import { FileIdentificationData } from '../Entities/FileIdentificationData';
 import { hashCode } from '../Utils/StringUtils';
+import { ListItemData } from '../Components/ListItem';
 const { ccclass, property } = _decorator;
 
 @ccclass('ContentManager')
@@ -69,7 +70,6 @@ export class ContentManager extends Component {
     private _metaProvider: FileMetaProvider = null;
     private _meta: MetaDataEntity = null;
     private _favoritesProvider: FavoritesProvider = null;
-    private _favoritesUploadRequested: boolean = false;
     private readonly _useInPlaceDelete = true;
 
     start() {
@@ -104,6 +104,9 @@ export class ContentManager extends Component {
             if (idx < entities.length) {
                 const m = entities[idx];
                 this._metaProvider.removeFileMeta(m);
+                if (m === this._meta) {
+                    this._meta = this._metaProvider.getFileMeta(this._meta.name, this._meta.idData);
+                }
             }
         });
 
@@ -146,24 +149,22 @@ export class ContentManager extends Component {
             this.clearFilter();
         });
 
+        this._inputWindow.node.on(InputWindowEvents.UPLOAD_META_FILE, () => {
+            this.textFileInput.request().then(str => {
+                this._metaProvider.addOrUpdate(this.textFileInput.currentFileName, str);
+            });
+        });
+
         this.listScroll.node.on(ListScrollViewEvent.SELECT_ITEM, (idx: number) => {
             this.loadPhotoWithIdx(idx);
         });
 
-        this.textFileInput.node.on(FileInputEventType.DATA_RECEIVED, (str: string) => {
-            if (this._favoritesUploadRequested) {
-                this._favoritesProvider.addFromJSON(str);
-                this._favoritesUploadRequested = false;
-            } else {
-                this.processData(str, this.textFileInput.currentFileName);
-                this.fileName.string = this.textFileInput.currentFileName;
-            }
-        });
-
         const scene = this.getComponent(MainScene);
         scene.node.on(MainSceneEventType.FILE_INPUT_REQUESTED, () => {
-            this._favoritesUploadRequested = false;
-            this.textFileInput.request();
+            this.textFileInput.request().then(str => {
+                this.processData(str, this.textFileInput.currentFileName);
+                this.fileName.string = this.textFileInput.currentFileName;
+            });
         });
 
         this.scrollInput.node.on(ScrollInputEventType.UPDATE_X, (val: number) => {
@@ -196,8 +197,9 @@ export class ContentManager extends Component {
             });
 
             fw.node.on(FavoritesWindowEventType.UPLOAD_SEVERAL_FAVORITES, () => {
-                this._favoritesUploadRequested = true;
-                this.textFileInput.request();
+                this.textFileInput.request().then(str => {
+                    this._favoritesProvider.addFromJSON(str);
+                });
             });
 
             fw.node.on(WindowEventType.OPENING, () => {
@@ -214,7 +216,8 @@ export class ContentManager extends Component {
 
     private populateScrollView() {
         if (this._meta) {
-            this.listScroll.setData(this._data, this._meta.deleted);
+            const data1 = this._meta.deleted.map(d => ({ index: d, deleted: true } as ListItemData));
+            this.listScroll.setData(this._data, data1);
         } else {
             this.listScroll.setData(this._data);
         }
