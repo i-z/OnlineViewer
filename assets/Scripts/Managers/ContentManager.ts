@@ -65,7 +65,7 @@ export class ContentManager extends Component {
     private _data: string[] = []
     private _fileData: string[] = []
     private _selectedIdx: number = 0;
-    private _mapIndex: number[] = null;
+    private _mapIndex: ListItemData[] = null;
 
     private _metaProvider: FileMetaProvider = null;
     private _meta: MetaDataEntity = null;
@@ -240,13 +240,14 @@ export class ContentManager extends Component {
         }
         this._mapIndex = [];
         const filter = favorites ? this._meta.favorites : this._meta.deleted;
+        let i = 0;
         this._data = this._data.filter((v, k) => {
             if (filter.indexOf(k) < 0)
                 return false;
-            this._mapIndex.push(k);
+            this._mapIndex.push({ index: i++, id: k, deleted: false });
             return true;
         });
-        this.listScroll.setData(this._data);
+        this.listScroll.setData(this._data, this._mapIndex);
         if (this._data.length > 0)
             this.loadPhotoWithIdx(0);
     }
@@ -359,7 +360,7 @@ export class ContentManager extends Component {
     }
 
     imageLoaded() {
-        const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+        const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx].id : this._selectedIdx;
         this.likeButon.isChecked = this._meta.isLiked(idx);
         this.deleteButon.isChecked = this._meta.isDeleted(idx);
         this.updateFavorites();
@@ -386,8 +387,10 @@ export class ContentManager extends Component {
 
     next() {
         let idx = this._selectedIdx + 1;
-        while (this._meta.deleted.indexOf(idx) >= 0)
-            ++idx;
+        if (!this._mapIndex) {
+            while (this._meta.deleted.indexOf(idx) >= 0)
+                ++idx;
+        }
         if (idx < this._data.length) {
             this.loadPhotoWithIdx(idx);
         }
@@ -395,8 +398,10 @@ export class ContentManager extends Component {
 
     previous() {
         let idx = this._selectedIdx - 1;
-        while (this._meta.deleted.indexOf(idx) >= 0)
-            --idx;
+        if (!this._mapIndex) {
+            while (this._meta.deleted.indexOf(idx) >= 0)
+                --idx;
+        }
         if (idx >= 0) {
             this.loadPhotoWithIdx(idx);
         }
@@ -409,7 +414,7 @@ export class ContentManager extends Component {
 
     makeFavorite() {
         if (this._meta) {
-            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx].id : this._selectedIdx;
             if (this._meta.isLiked(idx)) {
                 this._meta.removeFromFavorites(idx);
             } else {
@@ -420,7 +425,7 @@ export class ContentManager extends Component {
 
     deleteCurrent() {
         if (this._meta) {
-            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx] : this._selectedIdx;
+            const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx].id : this._selectedIdx;
             if (this._meta.isDeleted(idx)) {
                 this._meta.restore(idx);
             } else {

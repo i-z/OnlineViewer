@@ -8,9 +8,10 @@ export enum ListItemEvent {
 
 export interface ListItemData {
     index: number;
+    id?: number;
     flags?: number[];
-    text: string;
-    number: number;
+    text?: string;
+    number?: number;
     deleted: boolean;
 }
 
@@ -38,11 +39,15 @@ export class ListItem extends Component {
 
     setString(idx: number, str: string, data?: ListItemData) {
         this._idx = idx;
+        let id = idx;
         if (this.addIdxToString) {
+            if (data?.id) {
+                id = data.id;
+            }
             if (this.startIdxFromZero) {
-                this.text.string = ` ${idx} ${str}`;
+                this.text.string = ` ${id} ${str}`;
             } else {
-                this.text.string = ` ${idx + 1} ${str}`;
+                this.text.string = ` ${id + 1} ${str}`;
             }
         }
         else {
