@@ -48,6 +48,8 @@ export class InputWindow extends Window {
     uploadMeta: Button = null;
     @property(Button)
     submitUrls: Button = null;
+    @property(Button)
+    clearUrls: Button = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
@@ -62,6 +64,10 @@ export class InputWindow extends Window {
         this.clearFilter.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.CLEAR_FILTER); });
         this.uploadMeta.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.UPLOAD_META_FILE); });
         this.submitUrls.node.on(Button.EventType.CLICK, () => this.okTouch());
+        this.clearUrls.node.on(Button.EventType.CLICK, () => {
+            this.text.string = '';
+            this.listName.string = '';
+        });
     }
 
     okTouch() {
