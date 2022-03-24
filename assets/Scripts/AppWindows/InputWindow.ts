@@ -46,6 +46,8 @@ export class InputWindow extends Window {
     clearFilter: Button = null;
     @property(Button)
     uploadMeta: Button = null;
+    @property(Button)
+    submitUrls: Button = null;
 
     private _idx: number = -1;
     private _data: MetaDataEntity[] = [];
@@ -55,10 +57,11 @@ export class InputWindow extends Window {
         this.description.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_DESCRIPTION, sender.string, this._idx));
         this.shelf.node.on(EditBox.EventType.EDITING_DID_ENDED, (sender: EditBox) => this.node.emit(InputWindowEvents.UPDATE_SHELF, sender.string, this._idx));
         this._confirm = this.getComponent(ConfirmationHelper);
-        this.filterFavorites.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_FAVORITES);});
-        this.filterDeleted.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.ONLY_DELETED);});
-        this.clearFilter.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.CLEAR_FILTER);});
-        this.uploadMeta.node.on(Button.EventType.CLICK, () => {this.node.emit(InputWindowEvents.UPLOAD_META_FILE);});
+        this.filterFavorites.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.ONLY_FAVORITES); });
+        this.filterDeleted.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.ONLY_DELETED); });
+        this.clearFilter.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.CLEAR_FILTER); });
+        this.uploadMeta.node.on(Button.EventType.CLICK, () => { this.node.emit(InputWindowEvents.UPLOAD_META_FILE); });
+        this.submitUrls.node.on(Button.EventType.CLICK, () => this.okTouch());
     }
 
     okTouch() {

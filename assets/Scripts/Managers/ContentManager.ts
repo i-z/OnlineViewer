@@ -361,11 +361,13 @@ export class ContentManager extends Component {
 
     imageLoaded() {
         const idx = this._mapIndex && this._selectedIdx < this._mapIndex.length ? this._mapIndex[this._selectedIdx].id : this._selectedIdx;
-        this.likeButon.isChecked = this._meta.isLiked(idx);
-        this.deleteButon.isChecked = this._meta.isDeleted(idx);
+        if (this._meta) {
+            this.likeButon.isChecked = this._meta.isLiked(idx);
+            this.deleteButon.isChecked = this._meta.isDeleted(idx);
+            if (this._mapIndex == null)
+                this._meta.currentIndex = this._selectedIdx;
+        }
         this.updateFavorites();
-        if (this._mapIndex == null)
-            this._meta.currentIndex = this._selectedIdx;
     }
 
     processData(str: string, fileName?: string) {
@@ -375,8 +377,10 @@ export class ContentManager extends Component {
             this._meta = this._metaProvider.getFileMeta(fileName, ContentManager.getFileIdData(this._data));
         }
         this.populateScrollView();
-        if (this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
+        if (this._meta && this._meta.currentIndex >= 0 && this._meta.currentIndex < this._data.length) {
             this.loadPhotoWithIdx(this._meta.currentIndex);
+        } else {
+            this.loadPhotoWithIdx(0);
         }
     }
 
@@ -388,7 +392,7 @@ export class ContentManager extends Component {
     next() {
         let idx = this._selectedIdx + 1;
         if (!this._mapIndex) {
-            while (this._meta.deleted.indexOf(idx) >= 0)
+            while (this._meta && this._meta.deleted.indexOf(idx) >= 0)
                 ++idx;
         }
         if (idx < this._data.length) {
@@ -399,7 +403,7 @@ export class ContentManager extends Component {
     previous() {
         let idx = this._selectedIdx - 1;
         if (!this._mapIndex) {
-            while (this._meta.deleted.indexOf(idx) >= 0)
+            while (this._meta && this._meta.deleted.indexOf(idx) >= 0)
                 --idx;
         }
         if (idx >= 0) {
